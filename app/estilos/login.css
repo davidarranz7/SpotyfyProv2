@@ -1,0 +1,129 @@
+:root {
+    --spotify-green: #1DB954;
+    --lamp-color: #e0e0e0;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+    margin: 0;
+    min-height: 100vh;
+    /* EL FONDO SIEMPRE ESTÁ ACTIVO AHORA */
+    background:
+        radial-gradient(circle at 50% -10%, rgba(29, 185, 84, 0.2), transparent 50%),
+        radial-gradient(circle at 0% 100%, rgba(29, 185, 84, 0.05), transparent 40%),
+        linear-gradient(180deg, #0a0a0a, #000);
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    color: white;
+    overflow: hidden;
+}
+
+/* --- ENCABEZADO FIJO --- */
+#encabezado {
+    width: 100%;
+    text-align: center;
+    padding: 60px 20px 20px;
+    z-index: 20;
+}
+
+#encabezado h1 {
+    font-size: 4rem;
+    font-weight: 900;
+    color: var(--spotify-green);
+    letter-spacing: -2px;
+    text-shadow: 0 0 30px rgba(29, 185, 84, 0.6);
+}
+
+/* --- CONTENEDOR PRINCIPAL --- */
+.container-principal {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 80px;
+    margin-top: 20px;
+}
+
+/* --- LA LÁMPARA --- */
+.lamp-wrapper { position: relative; z-index: 10; }
+.lamp-head { width: 140px; height: 70px; background: var(--lamp-color); border-radius: 70px 70px 0 0; position: relative; z-index: 2; }
+.lamp-stick { width: 8px; height: 200px; background: var(--lamp-color); margin: 0 auto; }
+.lamp-base { width: 100px; height: 12px; background: var(--lamp-color); border-radius: 10px; margin: 0 auto; }
+
+/* EL CORDELITO */
+.pull-cord {
+    position: absolute;
+    top: 70px;
+    right: 35px;
+    width: 2px;
+    height: 70px;
+    background: #777;
+    cursor: pointer;
+    transition: height 0.1s ease;
+    z-index: 1;
+}
+
+.pull-cord::after {
+    content: '';
+    position: absolute;
+    bottom: -10px;
+    left: -4px;
+    width: 10px;
+    height: 10px;
+    background: #aaa;
+    border-radius: 50%;
+}
+
+.pull-cord:active { height: 85px; }
+
+/* Brillo que emite la lámpara al encenderse */
+.light-glow {
+    position: absolute;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+    opacity: 0;
+    transition: all 0.5s ease;
+}
+
+body[data-on="true"] .light-glow { width: 500px; height: 500px; opacity: 1; }
+
+/* --- CUADRO DE LOGIN (OCULTO/VISIBLE) --- */
+.auth-content {
+    opacity: 0;
+    transform: translateX(40px);
+    transition: all 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+    pointer-events: none;
+}
+
+/* Cuando data-on es true, el login aparece */
+body[data-on="true"] .auth-content {
+    opacity: 1;
+    transform: translateX(0);
+    pointer-events: auto;
+}
+
+.seccion-auth {
+    background: rgba(18, 18, 18, 0.8);
+    backdrop-filter: blur(20px);
+    padding: 45px 40px;
+    border-radius: 28px;
+    width: 400px;
+    box-shadow: 0 30px 60px rgba(0,0,0,0.6), inset 0 0 0 1px rgba(255,255,255,0.05);
+}
+
+.seccion-auth input {
+    width: 100%; padding: 18px; margin-bottom: 18px;
+    background: #242424; border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 12px; color: white;
+}
+
+.seccion-auth button {
+    width: 100%; padding: 18px; background: var(--spotify-green);
+    border: none; border-radius: 50px; color: black; font-weight: 800; cursor: pointer;
+}

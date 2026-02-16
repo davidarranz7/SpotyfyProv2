@@ -1,0 +1,43 @@
+<nav class="navbar">
+
+  <div class="nav-container">
+
+    <!-- LOGO -->
+    <div class="nav-left">
+      <a href="/menu" class="logo">
+        Spotify<span>Pro</span>
+      </a>
+    </div>
+
+    <!-- BUSCADOR CENTRAL -->
+    <form action="/buscar" method="get" class="search-form">
+      <i class="fas fa-search"></i>
+      <input
+        type="text"
+        name="q"
+        placeholder="Buscar música en YouTube..."
+        required
+      >
+      <button type="submit">Buscar</button>
+    </form>
+
+    <!-- LINKS -->
+    <ul class="nav-menu">
+      <li><a href="/menu" class="nav-link">Inicio</a></li>
+      <li><a href="/musica" class="nav-link">Escuchar</a></li>
+      <li><a href="#" class="nav-link disabled">Playlists</a></li>
+      <li><a href="#" class="nav-link disabled">Favoritas</a></li>
+      <li><a href="/subir-cancion" class="nav-link">Subir</a></li>
+    </ul>
+
+    <!-- DERECHA -->
+    <div class="nav-right">
+      <button id="logout-btn" class="logout-btn">
+        <i class="fas fa-sign-out-alt"></i>
+        Cerrar sesión
+      </button>
+    </div>
+
+  </div>
+
+</nav>

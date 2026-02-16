@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spotify pro | Subir Música</title>
+    <link rel="stylesheet" href="/estilos/menu.css">
+    <link rel="stylesheet" href="/estilos/subirCancion.css">
+</head>
+<body>
+
+{% include "menu.html" %}
+
+<main class="subir-container">
+    <div class="subir-card">
+        <h2>Añadir nueva música</h2>
+        <p>Pega el enlace de YouTube y nosotros nos encargamos del resto.</p>
+
+        <form id="form-subir">
+            <div class="input-group">
+                <label for="url-yt">URL de YouTube</label>
+                <input type="url" id="url-yt" name="url" placeholder="https://www.youtube.com/watch?v=..." required>
+            </div>
+
+            <button type="submit" id="btn-submit">Convertir y añadir a mi lista</button>
+        </form>
+
+        <div id="loading-area" class="hidden">
+            <div class="spinner"></div>
+            <p>Procesando audio... Esto puede tardar unos segundos.</p>
+        </div>
+
+        <div id="mensaje-exito" class="hidden success-msg">
+            ¡Canción añadida correctamente! Redirigiendo...
+        </div>
+    </div>
+</main>
+
+<script src="/script/menu.js"></script>
+<script src="/script/subirCancion.js"></script>
+</body>
+</html>

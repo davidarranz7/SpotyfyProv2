@@ -1,0 +1,168 @@
+:root {
+    --bg-dark: #121212;
+    --bg-card: #181818;
+    --spotify-green: #1DB954;
+    --text-main: #FFFFFF;
+    --text-muted: #B3B3B3;
+    --danger: #e74c3c;
+}
+
+body {
+    background-color: var(--bg-dark);
+    color: var(--text-main);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+}
+
+.admin-wrapper {
+    display: flex;
+    min-height: 100vh;
+}
+
+/* Sidebar */
+.sidebar {
+    width: 240px;
+    background-color: #000;
+    padding: 20px;
+}
+
+.logo {
+    font-size: 24px;
+    font-weight: bold;
+    color: var(--spotify-green);
+    margin-bottom: 40px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.nav-item {
+    display: block;
+    color: var(--text-muted);
+    text-decoration: none;
+    padding: 12px;
+    border-radius: 4px;
+    transition: 0.3s;
+}
+
+.nav-item:hover, .nav-item.active {
+    color: #fff;
+    background: #282828;
+}
+
+/* Main Content */
+.main-content {
+    flex: 1;
+    padding: 40px;
+}
+
+.table-container {
+    background: var(--bg-card);
+    border-radius: 8px;
+    padding: 20px;
+    margin-top: 20px;
+}
+
+.user-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.user-table th {
+    text-align: left;
+    color: var(--text-muted);
+    border-bottom: 1px solid #333;
+    padding: 15px;
+}
+
+.user-table td {
+    padding: 15px;
+    border-bottom: 1px solid #282828;
+}
+
+/* Password and Buttons */
+.pass-wrapper {
+    display: flex;
+    align-items: center;
+    background: #2a2a2a;
+    border-radius: 4px;
+    padding: 5px 10px;
+}
+
+.pass-input {
+    background: transparent;
+    border: none;
+    color: #fff;
+    width: 100px;
+}
+
+.toggle-pass, .btn-delete {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.toggle-pass:hover { color: var(--spotify-green); }
+
+.btn-delete {
+    color: var(--danger);
+    padding: 8px 12px;
+    border: 1px solid var(--danger);
+    border-radius: 20px;
+}
+
+.btn-delete:hover {
+    background: var(--danger);
+    color: white;
+}
+
+/* --- RESPONSIVE DESIGN --- */
+
+@media (max-width: 768px) {
+    .admin-wrapper {
+        flex-direction: column; /* La barra lateral se pone arriba */
+    }
+
+    .sidebar {
+        width: 100%;
+        box-sizing: border-box;
+        padding: 15px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .logo {
+        margin-bottom: 0;
+        font-size: 20px;
+    }
+
+    nav {
+        display: flex;
+        gap: 10px;
+    }
+
+    .main-content {
+        padding: 20px;
+    }
+
+    header h1 {
+        font-size: 22px;
+    }
+
+    /* Hacer que la tabla se pueda deslizar lateralmente sin romper la web */
+    .table-container {
+        overflow-x: auto;
+        padding: 10px;
+    }
+
+    .user-table {
+        min-width: 600px; /* Asegura que la tabla mantenga su forma al deslizar */
+    }
+
+    .pass-input {
+        width: 80px; /* Un poco más pequeña para ahorrar espacio */
+    }
+}

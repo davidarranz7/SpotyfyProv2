@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spotify - Login / Registro</title>
+    <link rel="stylesheet" href="/estilos/login.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+</head>
+<body data-on="false">
+
+<header id="encabezado">
+    <h1>Spotify Premium</h1>
+    <p class="subtitulo">Tu música, sin límites</p>
+</header>
+
+<main class="container-principal">
+
+    <div class="lamp-wrapper">
+        <div class="lamp-head"></div>
+        <div class="lamp-stick"></div>
+        <div class="lamp-base"></div>
+        <div class="pull-cord"></div> <div class="light-glow"></div>
+    </div>
+
+    <div class="auth-content">
+        {% if mode == "login" %}
+            <section id="login-section" class="seccion-auth">
+                <h2>Bienvenido</h2>
+                <input type="text" id="login-username" placeholder="Username">
+                <input type="password" id="login-password" placeholder="Password">
+                <button id="login-button">Sign In</button>
+                <p id="login-message" class="mensaje"></p>
+                <p class="link">¿No tienes cuenta? <a href="/register">Regístrate</a></p>
+            </section>
+        {% elif mode == "register" %}
+            <section id="register-section" class="seccion-auth">
+                <h2>Crear cuenta</h2>
+                <input type="text" id="register-username" placeholder="Usuario">
+                <input type="password" id="register-password" placeholder="Contraseña">
+                <button id="register-button">Registrar</button>
+                <p id="register-message" class="mensaje"></p>
+                <p class="link">¿Ya tienes cuenta? <a href="/">Inicia sesión</a></p>
+            </section>
+        {% endif %}
+    </div>
+
+</main>
+
+<script src="/script/login.js"></script>
+</body>
+</html>

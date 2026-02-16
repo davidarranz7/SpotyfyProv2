@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Spotify Pro | Inicio</title>
+
+    <link rel="stylesheet" href="/estilos/menu.css">
+    <link rel="stylesheet" href="/estilos/principal.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+<body class="ultra-dark">
+
+{% include 'menu.html' %}
+
+<main class="dashboard">
+
+    <!-- HERO HEADER -->
+    <section class="hero-section">
+        <div class="hero-left">
+            <h1 id="greeting">Bienvenido, {{ usuario }}</h1>
+            <p>Tu experiencia musical inteligente</p>
+
+            <div class="hero-actions">
+                <a href="/musica" class="btn-primary">
+                    <i class="fas fa-play"></i>
+                    Reproducir ahora
+                </a>
+
+                <button class="btn-secondary" id="explore-btn">
+                    Explorar tendencias
+                </button>
+            </div>
+        </div>
+
+        <div class="hero-stats">
+            <div class="stat-card">
+                <span id="stat-favorites">0</span>
+                <p>Favoritas</p>
+            </div>
+
+            <div class="stat-card">
+                <span id="stat-playlists">0</span>
+                <p>Playlist Local</p>
+            </div>
+
+            <div class="stat-card">
+                <span id="stat-session">0m</span>
+                <p>Sesión activa</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- CONTINUAR ESCUCHANDO -->
+    <section class="section">
+        <div class="section-header">
+            <h2>Continuar escuchando</h2>
+        </div>
+
+        <div class="cards-grid" id="continue-grid">
+            <!-- Se rellenará dinámicamente -->
+        </div>
+    </section>
+
+    <!-- FAVORITOS -->
+    <section class="section">
+        <div class="section-header">
+            <h2>Tus favoritas</h2>
+        </div>
+
+        <div class="cards-grid" id="favorites-grid">
+            <!-- Dinámico -->
+        </div>
+    </section>
+
+    <!-- FUTURO -->
+    <section class="future-box">
+        <h3>Próximamente</h3>
+        <div class="future-grid">
+            <div class="future-item">
+                <i class="fas fa-users"></i>
+                <p>Conectar con amigos</p>
+            </div>
+
+            <div class="future-item">
+                <i class="fas fa-chart-line"></i>
+                <p>Estadísticas avanzadas</p>
+            </div>
+
+            <div class="future-item">
+                <i class="fas fa-brain"></i>
+                <p>Recomendaciones IA</p>
+            </div>
+
+            <div class="future-item">
+                <i class="fas fa-cloud-upload-alt"></i>
+                <p>Subida directa desde móvil</p>
+            </div>
+        </div>
+    </section>
+
+</main>
+
+<script src="/script/principal.js"></script>
+<script src="/script/menu.js"></script>
+
+</body>
+</html>

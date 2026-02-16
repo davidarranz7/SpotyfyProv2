@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Buscador - Spotify Pro</title>
+
+    <!-- ESTILOS -->
+    <link rel="stylesheet" href="/estilos/menu.css">
+    <link rel="stylesheet" href="/estilos/buscador.css">
+
+    <!-- FUENTE -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+</head>
+
+<body>
+
+{% include "menu.html" %}
+
+<div class="layout">
+
+    <!-- ================= SIDEBAR ================= -->
+    <aside class="sidebar">
+
+        <h3>🎵 Resultados</h3>
+
+        {% if resultados %}
+
+            <ul class="songs">
+
+            {% for r in resultados %}
+
+                <li>
+
+                    <span class="song-title">
+                        {{ r.titulo }}
+                    </span>
+
+                    <div class="song-actions">
+
+                        <!-- PLAY -->
+                        <button
+                            onclick="reproducir('{{ r.url }}', `{{ r.titulo }}`)">
+                            ▶
+                        </button>
+
+                        <!-- ADD (YA NO PASA URL) -->
+                        <button
+                            onclick="añadirCancion()">
+                            +
+                        </button>
+
+                    </div>
+
+                </li>
+
+            {% endfor %}
+
+            </ul>
+
+        {% else %}
+
+            <p class="no-results">
+                Sin resultados
+            </p>
+
+        {% endif %}
+
+    </aside>
+
+
+    <!-- ================= PLAYER ================= -->
+    <main class="player-panel">
+
+        <div class="player-box">
+
+            <!-- TÍTULO -->
+            <h2 id="big-title">
+                Selecciona una canción
+            </h2>
+
+            <!-- VISUALIZADOR -->
+            <div
+                id="audio-visualizer"
+                class="audio-visualizer">
+            </div>
+
+            <!-- AUDIO -->
+            <audio
+                id="audio"
+                controls
+                preload="auto"
+                playsinline>
+            </audio>
+
+            <!-- NAVEGACIÓN -->
+            <div class="nav">
+
+                <button id="prev">⏮</button>
+
+                <button id="next">⏭</button>
+
+            </div>
+
+        </div>
+
+    </main>
+
+</div>
+
+<!-- SCRIPT -->
+<script src="/script/buscador.js"></script>
+
+</body>
+</html>
