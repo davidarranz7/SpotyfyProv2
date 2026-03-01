@@ -1,37 +1,25 @@
+import os
+
+from dotenv import load_dotenv
 from fastapi import FastAPI, Request, Depends, HTTPException, Response
 from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
+from supabase import create_client, Client
+from pydantic import BaseModel
+import yt_dlp
+import httpx
 
 from app.database import engine, SessionLocal
 from app.models import Base, Usuario, Cancion
 from app.esquemas import RegistroUsuario, LoginUsuario, URLMusica
 
-import yt_dlp
-import os
-
-import os
-from dotenv import load_dotenv
-from supabase import create_client, Client
-from fastapi import FastAPI, Request, Depends, HTTPException
-from fastapi.responses import HTMLResponse
-
-import os
-from dotenv import load_dotenv
-from fastapi.responses import JSONResponse
-
-from yt_dlp import YoutubeDL
-
-
-import httpx
-
 app = FastAPI()
 
-
 load_dotenv()
-# Configuración de Supabase
+
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_SERVICE_KEY")
 YOUTUBE_API_KEY = os.getenv("YOUTUBE_API_KEY")
@@ -42,11 +30,8 @@ Base.metadata.create_all(bind=engine)
 
 templates = Jinja2Templates(directory="app/estatico")
 
-
 app.mount("/estilos", StaticFiles(directory="app/estilos"), name="estilos")
 app.mount("/script", StaticFiles(directory="app/script"), name="script")
-
-
 
 def obtener_db():
     db = SessionLocal()
@@ -59,9 +44,12 @@ def obtener_db():
 def require_login(request: Request):
     usuario = request.cookies.get("usuario")
     if not usuario:
-        # Redirigir al login si no hay cookie
         raise HTTPException(status_code=303, headers={"Location": "/"})
     return usuario
+
+class ConfirmarRuta(BaseModel):
+    ruta: str
+
 
 # PÁGINAS
 
@@ -107,7 +95,6 @@ def musica_page(
         db: Session = Depends(obtener_db),
         usuario_nombre: str = Depends(require_login)
 ):
-    # A. TUS CANCIONES PREDEFINIDAS
     canciones_predefinidas = [
         {
             "titulo": "Future Remix 98",
@@ -122,8 +109,6 @@ def musica_page(
             "url": "https://irqgevvipamnmepevgrk.supabase.co/storage/v1/object/public/MUSICA/Spada%20-%20Waiting%20ft.%20Chiara%20Galiazzo%20(Official%20Visualizer).mp3"
         }
     ]
-
-    # B. CANCIONES DEL USUARIO (de la Base de Datos)
     usuario_db = db.query(Usuario).filter(Usuario.nombre_usuario == usuario_nombre).first()
     canciones_usuario = []
 
@@ -133,8 +118,6 @@ def musica_page(
                 "titulo": c.titulo,
                 "url": c.url_archivo
             })
-
-    # C. UNIMOS AMBAS LISTAS
     todas_las_canciones = canciones_predefinidas + canciones_usuario
 
     return templates.TemplateResponse(
@@ -145,21 +128,6 @@ def musica_page(
             "canciones": todas_las_canciones
         }
     )
-
-@app.get("/subir-cancion", response_class=HTMLResponse)
-def subir_cancion_page(
-    request: Request,
-    usuario: str = Depends(require_login)
-):
-    return templates.TemplateResponse(
-        "subirCancion.html",
-        {
-            "request": request,
-            "usuario": usuario
-        }
-    )
-
-
 
 @app.post("/registro")
 def registrar_usuario(
@@ -190,11 +158,9 @@ def login_usuario(
     datos: LoginUsuario,
     db: Session = Depends(obtener_db)
 ):
-    # 1. CARGAMOS LAS CREDENCIALES MAESTRAS
     ADMIN_MAESTRO = os.getenv("ADMIN_USER", "admin")
     PASS_MAESTRA = os.getenv("ADMIN_PASS", "admin1234")
 
-    # 2. VERIFICAMOS SI ES EL ADMIN
     if datos.nombre_usuario == ADMIN_MAESTRO and datos.contrasena == PASS_MAESTRA:
         response = JSONResponse({"mensaje": "Login Admin correcto", "redirect": "/admin-panel"})
         response.set_cookie(
@@ -204,8 +170,6 @@ def login_usuario(
             samesite="lax"
         )
         return response
-
-    # 3. SI NO ES ADMIN, BUSCAMOS EN LA BASE DE DATOS (USUARIOS NORMALES)
     usuario = db.query(Usuario).filter(
         Usuario.nombre_usuario == datos.nombre_usuario,
         Usuario.contrasena == datos.contrasena
@@ -237,27 +201,23 @@ async def procesar_musica(
         'format': 'bestaudio/best',
         'outtmpl': f'{archivo_temp}.%(ext)s',
         'postprocessors': [{'key': 'FFmpegExtractAudio', 'preferredcodec': 'mp3', 'preferredquality': '192'}],
-        'http_headers': {'User-Agent': 'Mozilla/5.0...'},  # El header que pusimos antes
+        'http_headers': {'User-Agent': 'Mozilla/5.0...'},
     }
 
     try:
-        # A. Descarga y conversión
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(url_video, download=True)
             titulo = info.get('title', 'Cancion').replace("/", "-")
             archivo_final = f"{archivo_temp}.mp3"
 
-        # B. Subida al Storage de Supabase (Crea carpeta por usuario)
         with open(archivo_final, "rb") as f:
             ruta_destino = f"{usuario_actual}/{titulo}.mp3"
-            # Importante: El bucket en Supabase debe llamarse "MUSICA"
             supabase.storage.from_("MUSICA").upload(
                 path=ruta_destino,
                 file=f,
                 file_options={"content-type": "audio/mpeg"}
             )
 
-        # C. Obtener URL pública y guardar en SQLite
         url_real = supabase.storage.from_("MUSICA").get_public_url(ruta_destino)
 
         user_db = db.query(Usuario).filter(Usuario.nombre_usuario == usuario_actual).first()
@@ -266,7 +226,6 @@ async def procesar_musica(
         db.add(nueva_cancion)
         db.commit()
 
-        # D. Borrar archivo temporal del servidor
         if os.path.exists(archivo_final): os.remove(archivo_final)
 
         return {"mensaje": "Éxito", "titulo": titulo}
@@ -282,11 +241,9 @@ def admin_page(
         db: Session = Depends(obtener_db),
         usuario_actual: str = Depends(require_login)
 ):
-    # Solo dejamos pasar si el nombre en la cookie es el del admin maestro
     if usuario_actual != os.getenv("ADMIN_USER", "admin"):
         return RedirectResponse(url="/menu")
 
-    # Sacamos los usuarios de la BD para mostrarlos en la tabla
     usuarios_registrados = db.query(Usuario).all()
 
     return templates.TemplateResponse(
@@ -301,7 +258,6 @@ def delete_user(
         db: Session = Depends(obtener_db),
         usuario_actual: str = Depends(require_login)
 ):
-    # Seguridad: Solo el admin real puede borrar
     if usuario_actual != os.getenv("ADMIN_USER", "admin"):
         raise HTTPException(status_code=403)
 
@@ -319,7 +275,6 @@ async def buscar_musica(request: Request, q: str, usuario: str = Depends(require
     """Busca en YouTube usando la API oficial para evitar bloqueos"""
     url_api = "https://www.googleapis.com/youtube/v3/search"
 
-    # YOUTUBE_API_KEY debe estar en tu archivo .env
     params = {
         "part": "snippet",
         "q": q,
@@ -330,15 +285,12 @@ async def buscar_musica(request: Request, q: str, usuario: str = Depends(require
 
     resultados = []
 
-    # Usamos httpx para una petición rápida y asíncrona
     async with httpx.AsyncClient() as client:
         resp = await client.get(url_api, params=params)
 
         if resp.status_code == 200:
             data = resp.json()
             for item in data.get("items", []):
-                # CORRECCIÓN: Validamos que el item tenga 'videoId' antes de intentar acceder a él
-                # Esto evita que el programa falle si YouTube devuelve canales o listas
                 if "videoId" in item["id"]:
                     resultados.append({
                         "titulo": item["snippet"]["title"],
@@ -347,7 +299,6 @@ async def buscar_musica(request: Request, q: str, usuario: str = Depends(require
                         "thumb": item["snippet"]["thumbnails"]["medium"]["url"]
                     })
         else:
-            # Imprime el error en la consola para que puedas debuguear si algo sale mal
             print(f"Error en la API de YouTube: {resp.text}")
 
     return templates.TemplateResponse(
@@ -359,23 +310,6 @@ async def buscar_musica(request: Request, q: str, usuario: str = Depends(require
             "resultados": resultados
         }
     )
-
-
-from pydantic import BaseModel
-import os
-
-
-# --- MODELOS DE DATOS ---
-
-class URLMusica(BaseModel):
-    url: str
-
-
-class ConfirmarRuta(BaseModel):
-    ruta: str
-
-
-# --- ENDPOINTS ---
 
 @app.post("/preparar-stream")
 async def preparar_stream(
@@ -441,11 +375,11 @@ async def preparar_stream(
 
 @app.post("/confirmar-cancion")
 async def confirmar_cancion(
-        datos: ConfirmarRuta,  # <--- Corregido para recibir JSON
+        datos: ConfirmarRuta,
         db: Session = Depends(obtener_db),
         usuario_actual: str = Depends(require_login)
 ):
-    ruta = datos.ruta  # Extraemos el string del modelo
+    ruta = datos.ruta
 
     print("\n==============================")
     print("💾 CONFIRMAR CANCIÓN")
@@ -455,21 +389,23 @@ async def confirmar_cancion(
 
     try:
         nombre_archivo = ruta.split("/")[-1]
+
+        prefijo = f"{usuario_actual}_"
+        if nombre_archivo.startswith(prefijo):
+            nombre_archivo = nombre_archivo.replace(prefijo, "", 1)
+
         nueva_ruta = f"{usuario_actual}/{nombre_archivo}"
 
         print("📂 Moviendo archivo a:", nueva_ruta)
 
-        # Copiar archivo en el bucket MUSICA
         supabase.storage.from_("MUSICA").copy(ruta, nueva_ruta)
-
-        # Borrar del intermediario
         supabase.storage.from_("MUSICA").remove([ruta])
 
-        # Obtener URL definitiva
         url_real = supabase.storage.from_("MUSICA").get_public_url(nueva_ruta)
 
-        # Buscar usuario en DB para el ID
-        user_db = db.query(Usuario).filter(Usuario.nombre_usuario == usuario_actual).first()
+        user_db = db.query(Usuario).filter(
+            Usuario.nombre_usuario == usuario_actual
+        ).first()
 
         nueva_cancion = Cancion(
             titulo=nombre_archivo.replace(".mp3", ""),

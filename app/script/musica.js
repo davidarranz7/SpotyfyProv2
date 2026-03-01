@@ -8,6 +8,8 @@ const timeTotal = document.getElementById("time-total");
 const playBtn = document.getElementById("play-btn");
 const vinyl = document.querySelector(".vinyl-record");
 
+const playIcon = playBtn.querySelector("i"); // 🔥 NUEVO
+
 let currentIndex = 0;
 let shuffle = false;
 let repeat = false;
@@ -114,11 +116,19 @@ audioPlayer.addEventListener("play", () => {
     initAudio();
     vinyl.style.animationPlayState = "running";
     animate();
+
+    // 🔥 CAMBIO ICONO A PAUSE
+    playIcon.classList.remove("fa-play");
+    playIcon.classList.add("fa-pause");
 });
 
 audioPlayer.addEventListener("pause", () => {
     vinyl.style.animationPlayState = "paused";
     cancelAnimationFrame(animationId);
+
+    // 🔥 CAMBIO ICONO A PLAY
+    playIcon.classList.remove("fa-pause");
+    playIcon.classList.add("fa-play");
 });
 
 function animate() {
@@ -185,3 +195,15 @@ function formatTime(secs) {
 }
 
 updateLists();
+
+/* ===== VOLUME CONTROL ===== */
+
+const volumeSlider = document.getElementById("volume-slider");
+
+// Volumen inicial
+audioPlayer.volume = volumeSlider.value;
+
+// Cuando mueves la barra
+volumeSlider.addEventListener("input", () => {
+    audioPlayer.volume = volumeSlider.value;
+});

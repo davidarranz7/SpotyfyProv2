@@ -1,364 +1,398 @@
-/* =========================
-   ROOT VARIABLES
-========================= */
+/* ================= RESET ================= */
 
-:root {
-    --green: #1DB954;
-    --green-light: #5efc82;
-    --green-glow: rgba(29, 185, 84, 0.35);
-
-    --white: #ffffff;
-    --grey: #a7a7a7;
-    --dark-bg: #050505;
-
-    --glass: rgba(255, 255, 255, 0.04);
-    --glass-strong: rgba(255, 255, 255, 0.07);
-    --glass-border: rgba(255, 255, 255, 0.08);
-
-    --transition: all 0.35s cubic-bezier(.2,.8,.2,1);
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
 }
 
-/* =========================
-   GLOBAL
-========================= */
+/* ================= BODY ================= */
 
-body.ultra-dark {
-    background: radial-gradient(circle at 20% 20%, #0a0a0a, #050505 60%);
-    color: var(--white);
-    font-family: 'Inter', sans-serif;
-    margin: 0;
-    overflow: hidden;
+body.ultra-dark{
+    font-family:'Segoe UI',sans-serif;
+    background:
+        radial-gradient(circle at 20% 20%, rgba(29,185,84,0.08), transparent),
+        radial-gradient(circle at 80% 80%, rgba(30,215,96,0.06), transparent),
+        #0f0f14;
+    color:white;
+    overflow-x:hidden;
 }
 
-/* =========================
-   GRID LAYOUT
-========================= */
+/* ================= GRID ================= */
 
-.main-grid {
-    display: grid;
-    grid-template-columns: 320px 1fr 300px;
-    height: 100vh;
-    padding: 20px;
-    gap: 20px;
+.main-grid{
+    display:grid;
+    grid-template-columns:280px 1fr 280px;
+    gap:40px;
+    padding:50px 70px;
+    min-height:100vh;
 }
 
-/* =========================
-   SIDEBAR
-========================= */
+/* ================= SIDEBAR ================= */
 
-.sidebar-glass {
-    background: var(--glass);
-    backdrop-filter: blur(35px);
-    border: 1px solid var(--glass-border);
-    border-radius: 28px;
-    display: flex;
-    flex-direction: column;
-    transition: var(--transition);
+.sidebar-glass{
+    background:linear-gradient(145deg,#181820,#121218);
+    border-radius:28px;
+    padding:25px;
+    box-shadow:0 30px 70px rgba(0,0,0,0.6);
+    display:flex;
+    flex-direction:column;
 }
 
-.sidebar-header {
-    padding: 30px 20px;
+.nav-title{
+    font-size:12px;
+    letter-spacing:2px;
+    opacity:0.6;
+    margin-bottom:20px;
 }
 
-.nav-title {
-    font-size: 10px;
-    letter-spacing: 3px;
-    color: var(--grey);
-    margin-bottom: 20px;
+.search-wrapper{
+    background:rgba(255,255,255,0.05);
+    border-radius:14px;
+    padding:10px 14px;
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin-bottom:25px;
 }
 
-.search-wrapper {
-    background: rgba(255,255,255,0.06);
-    border-radius: 14px;
-    padding: 12px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
+.search-wrapper input{
+    background:none;
+    border:none;
+    outline:none;
+    color:white;
+    width:100%;
+    font-size:13px;
 }
 
-.search-wrapper input {
-    background: none;
-    border: none;
-    color: white;
-    outline: none;
-    font-size: 13px;
-    width: 100%;
+/* ================= SONG LIST ================= */
+
+.song-row{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    padding:12px;
+    border-radius:14px;
+    margin-bottom:6px;
+    cursor:pointer;
+    transition:0.3s ease;
 }
 
-.queue-list {
-    flex: 1;
-    overflow-y: auto;
-    padding: 0 10px;
+.song-row:hover{
+    background:rgba(255,255,255,0.08);
+    transform:translateX(6px);
 }
 
-.song-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 14px;
-    border-radius: 16px;
-    cursor: pointer;
-    margin-bottom: 6px;
-    transition: var(--transition);
+.track-name{
+    font-size:13px;
 }
 
-.song-row:hover {
-    background: rgba(255,255,255,0.06);
-    transform: translateX(4px);
+.track-sub{
+    font-size:11px;
+    opacity:0.5;
 }
 
-.track-meta {
-    flex: 1;
-    margin-left: 10px;
+.like-btn{
+    margin-left:auto;
+    opacity:0.4;
+    transition:0.3s;
 }
 
-.track-name {
-    display: block;
-    font-size: 13px;
+.like-btn:hover{
+    color:#1db954;
+    opacity:1;
 }
 
-.track-sub {
-    font-size: 10px;
-    color: var(--grey);
+/* ================= PLAYER CENTER ================= */
+
+.player-center{
+    display:flex;
+    align-items:center;
+    justify-content:center;
 }
 
-.like-btn {
-    font-size: 13px;
-    color: var(--grey);
-    cursor: pointer;
-    transition: var(--transition);
+.card-glass-effect{
+    width:520px;
+    padding:60px 50px;
+    border-radius:40px;
+    background:linear-gradient(135deg,#1db954 0%, #121212 70%);
+    box-shadow:0 40px 100px rgba(0,0,0,0.7);
+    position:relative;
+    overflow:hidden;
+    text-align:center;
 }
 
-.like-btn:hover {
-    color: var(--green);
+.card-glass-effect::after{
+    content:"";
+    position:absolute;
+    width:600px;
+    height:600px;
+    background:radial-gradient(circle, rgba(255,255,255,0.08), transparent 70%);
+    top:-250px;
+    right:-250px;
+    transform:rotate(25deg);
 }
 
-/* =========================
-   PLAYER CENTER
-========================= */
+/* ================= VINYL ================= */
 
-.player-center {
-    display: flex;
-    align-items: center;
-    justify-content: center;
+.now-playing-pfp{
+    position:relative;
+    margin-bottom:35px;
 }
 
-.card-glass-effect {
-    background: linear-gradient(145deg, rgba(30,30,30,0.5), rgba(10,10,10,0.7));
-    backdrop-filter: blur(50px);
-    width: 460px;
-    padding: 40px;
-    border-radius: 42px;
-    border: 1px solid var(--glass-border);
-    box-shadow:
-        0 40px 80px rgba(0,0,0,0.6),
-        0 0 40px rgba(29,185,84,0.05);
-    transition: box-shadow 0.4s ease;
+.vinyl-record{
+    width:200px;
+    height:200px;
+    border-radius:50%;
+    margin:0 auto;
+    background:repeating-radial-gradient(circle, #222, #222 2px, #000 4px);
+    border:6px solid #111;
+    box-shadow:0 0 40px rgba(0,0,0,0.8);
+    animation:spin 6s linear infinite paused;
 }
 
-/* =========================
-   VINYL
-========================= */
-
-.now-playing-pfp {
-    width: 170px;
-    height: 170px;
-    margin: 0 auto 30px;
-    position: relative;
+.badge-hi-res{
+    position:absolute;
+    bottom:-15px;
+    left:50%;
+    transform:translateX(-50%);
+    background:white;
+    color:black;
+    font-size:10px;
+    font-weight:bold;
+    padding:6px 14px;
+    border-radius:50px;
 }
 
-.vinyl-record {
-    width: 100%;
-    height: 100%;
-    border-radius: 50%;
-    background: repeating-radial-gradient(circle, #222, #222 2px, #000 4px);
-    animation: spin 6s linear infinite paused;
-    border: 6px solid #111;
-    box-shadow: 0 0 30px rgba(0,0,0,0.7);
+/* ================= TRACK INFO ================= */
+
+.track-header h1{
+    font-size:22px;
+    margin-bottom:6px;
 }
 
-.badge-hi-res {
-    position: absolute;
-    bottom: -12px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: var(--green);
-    color: black;
-    font-size: 9px;
-    font-weight: 900;
-    padding: 5px 12px;
-    border-radius: 50px;
+.source-label{
+    font-size:11px;
+    opacity:0.6;
+    margin-bottom:25px;
 }
 
-/* =========================
-   VISUALIZER
-========================= */
+/* ================= VISUALIZER (AQUÍ ESTÁ LA MAGIA) ================= */
 
-.integrated-spectrum {
-    height: 55px;
-    margin: 15px 0 30px 0;
-    display: flex;
-    justify-content: center;
+.integrated-spectrum{
+    height:60px;
+    margin:20px 0 30px 0;
+    display:flex;
+    justify-content:center;
+    align-items:flex-end;
 }
 
-.spectrum-bars {
-    display: flex;
-    align-items: flex-end;
-    gap: 4px;
-    height: 100%;
+.spectrum-bars{
+    display:flex;
+    align-items:flex-end;
+    gap:4px;
+    height:100%;
 }
 
-.spectrum-bars div {
-    width: 6px;
-    background: linear-gradient(to top, var(--green), var(--green-light));
-    border-radius: 4px;
-    box-shadow: 0 0 10px var(--green-glow);
-    transition: height 0.1s linear;
+.spectrum-bars div{
+    width:6px;
+    height:8px; /* altura mínima visible */
+    background:linear-gradient(to top,#1db954,#1ed760);
+    border-radius:4px;
+    box-shadow:0 0 12px rgba(29,185,84,0.5);
+    transition:height 0.1s linear;
 }
 
-/* =========================
-   PROGRESS BAR
-========================= */
+/* ================= PROGRESS ================= */
 
-.progress-engine {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    margin-top: 15px;
-    font-size: 11px;
-    color: var(--grey);
+.progress-engine{
+    display:flex;
+    align-items:center;
+    gap:15px;
+    font-size:12px;
+    opacity:0.7;
 }
 
-.track-slider {
-    flex: 1;
-    height: 6px;
-    background: rgba(255,255,255,0.08);
-    border-radius: 20px;
-    cursor: pointer;
-    overflow: hidden;
+.track-slider{
+    flex:1;
+    height:6px;
+    background:rgba(255,255,255,0.15);
+    border-radius:20px;
+    overflow:hidden;
+    cursor:pointer;
 }
 
-.track-fill {
-    height: 100%;
-    background: linear-gradient(to right, var(--green), var(--green-light));
-    width: 0%;
+.track-fill{
+    height:100%;
+    width:0%;
+    background:linear-gradient(to right,#1db954,#1ed760);
 }
 
-/* =========================
-   ACTION BUTTONS
-========================= */
+/* ================= ACTION BUTTONS ================= */
 
-.track-actions {
-    display: flex;
-    justify-content: center;
-    gap: 15px;
-    margin-top: 15px;
+.track-actions{
+    display:flex;
+    justify-content:center;
+    gap:15px;
+    margin-top:25px;
 }
 
-.action-btn {
-    background: rgba(255,255,255,0.06);
-    border: 1px solid var(--glass-border);
-    padding: 8px 14px;
-    border-radius: 12px;
-    font-size: 12px;
-    cursor: pointer;
-    color: var(--white);
-    transition: var(--transition);
+.action-btn{
+    background:rgba(255,255,255,0.08);
+    border:none;
+    padding:10px 18px;
+    border-radius:14px;
+    font-size:12px;
+    color:white;
+    cursor:pointer;
+    transition:0.3s;
 }
 
-.action-btn:hover {
-    background: var(--green);
-    color: black;
+.action-btn:hover{
+    background:white;
+    color:black;
 }
 
-.liked {
-    color: var(--green);
+/* ================= CONTROLS ================= */
+
+.controls-master{
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    gap:35px;
+    margin:40px 0;
 }
 
-/* =========================
-   CONTROLS
-========================= */
-
-.controls-master {
-    display: flex;
-    justify-content: center;
-    gap: 30px;
-    margin: 35px 0;
+.control-btn{
+    font-size:18px;
+    opacity:0.6;
+    cursor:pointer;
+    transition:0.3s;
 }
 
-.control-btn {
-    font-size: 1.2rem;
-    cursor: pointer;
-    color: var(--grey);
-    transition: var(--transition);
+.control-btn:hover{
+    opacity:1;
+    transform:scale(1.2);
 }
 
-.control-btn:hover {
-    color: white;
-    transform: scale(1.15);
+.play-trigger{
+    width:80px;
+    height:80px;
+    background:white;
+    color:black;
+    border-radius:50%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:22px;
+    cursor:pointer;
+    transition:0.3s;
 }
 
-.play-trigger {
-    width: 70px;
-    height: 70px;
-    background: white;
-    color: black;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.4rem;
-    cursor: pointer;
-    transition: var(--transition);
+.play-trigger:hover{
+    transform:scale(1.1);
+    box-shadow:0 20px 50px rgba(255,255,255,0.3);
 }
 
-.play-trigger:hover {
-    transform: scale(1.12);
+/* ================= VOLUME ================= */
+
+.volume-ui{
+    display:flex;
+    align-items:center;
+    gap:15px;
+    justify-content:center;
+    margin-top:10px;
 }
 
-/* =========================
-   RIGHT PANEL
-========================= */
-
-.side-info {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
+.volume-ui input{
+    width:150px;
 }
 
-.info-card {
-    background: var(--glass);
-    border-radius: 24px;
-    padding: 28px;
-    border: 1px solid var(--glass-border);
+/* ================= RIGHT PANEL ================= */
+
+.side-info{
+    display:flex;
+    flex-direction:column;
+    gap:30px;
 }
 
-.info-card h3 {
-    font-size: 11px;
-    letter-spacing: 2px;
-    color: var(--grey);
-    margin-bottom: 20px;
+.info-card{
+    background:linear-gradient(145deg,#181820,#121218);
+    border-radius:28px;
+    padding:30px;
+    box-shadow:0 30px 70px rgba(0,0,0,0.6);
 }
 
-#favorites-list,
-#playlist-list {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    font-size: 12px;
+.info-card h3{
+    font-size:12px;
+    letter-spacing:2px;
+    opacity:0.6;
+    margin-bottom:20px;
 }
 
-#favorites-list li,
-#playlist-list li {
-    padding: 6px 0;
-    border-bottom: 1px solid rgba(255,255,255,0.05);
+/* ================= ANIMATION ================= */
+
+@keyframes spin{
+    from{ transform:rotate(0deg); }
+    to{ transform:rotate(360deg); }
 }
+
 
 /* =========================
-   ANIMATION
+   RESPONSIVE MOBILE
 ========================= */
 
-@keyframes spin {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
+@media (max-width: 900px){
+
+    .main-grid{
+        grid-template-columns: 1fr;
+        padding: 20px;
+        gap: 30px;
+    }
+
+    /* Ocultamos sidebar derecha para que no sature */
+    .side-info{
+        display: none;
+    }
+
+    /* Sidebar arriba */
+    .sidebar-glass{
+        order: 1;
+        width: 100%;
+    }
+
+    /* Player debajo */
+    .player-center{
+        order: 2;
+    }
+
+    .card-glass-effect{
+        width: 100%;
+        padding: 40px 25px;
+        border-radius: 30px;
+    }
+
+    /* Vinilo adaptativo */
+    .vinyl-record{
+        width: 55vw;
+        height: 55vw;
+        max-width: 240px;
+        max-height: 240px;
+    }
+
+    /* Controles más compactos */
+    .controls-master{
+        gap: 25px;
+    }
+
+    .play-trigger{
+        width: 65px;
+        height: 65px;
+        font-size: 18px;
+    }
+
+    .volume-ui input{
+        width: 120px;
+    }
+
 }
