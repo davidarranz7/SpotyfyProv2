@@ -7,6 +7,12 @@
   --panel: rgba(10,10,10,.92);
   --shadow: 0 18px 55px rgba(0,0,0,.55);
   --r: 16px;
+
+  /* NUEVO: danger + focus */
+  --danger: #ff3b3b;
+  --danger2: #ff5a5a;
+  --dangerText: #2a0404;
+  --focus: rgba(29,185,84,.35);
 }
 
 /* NAVBAR */
@@ -79,6 +85,31 @@
   letter-spacing: .2px;
 }
 
+/* ===== Interacciones (mejoras generales) ===== */
+.nav-link,
+.logout-btn,
+.nav-toggle-btn,
+.search-form button{
+  transition:
+    transform .16s ease,
+    background .16s ease,
+    border-color .16s ease,
+    box-shadow .16s ease,
+    color .16s ease,
+    filter .16s ease,
+    opacity .16s ease;
+}
+
+.nav-link:focus-visible,
+.logout-btn:focus-visible,
+.search-form input:focus-visible,
+.search-form button:focus-visible,
+.nav-toggle-btn:focus-visible{
+  outline: none;
+  box-shadow: 0 0 0 3px var(--focus);
+  border-color: rgba(29,185,84,.45);
+}
+
 /* ===== DESKTOP: menú normal visible ===== */
 .nav-toggle{ display:none; }
 .nav-toggle-btn{ display:none; }
@@ -105,16 +136,44 @@
   padding: 10px 10px;
   border-radius: 12px;
   transition: background .15s ease, transform .15s ease;
+  position: relative;
+  overflow: hidden;
 }
+
+/* Halo sutil al hover */
+.nav-link::after{
+  content:"";
+  position:absolute;
+  inset: 0;
+  background: radial-gradient(circle at 30% 30%, rgba(29,185,84,.18), transparent 60%);
+  opacity: 0;
+  transition: opacity .18s ease;
+  pointer-events:none;
+}
+
 .nav-link:hover{
-  background: rgba(255,255,255,.06);
+  background: rgba(255,255,255,.07);
   transform: translateY(-1px);
+  box-shadow: 0 10px 30px rgba(0,0,0,.18);
 }
+.nav-link:hover::after{ opacity: 1; }
+
+.nav-link:active{ transform: translateY(0); }
+
 .nav-link.disabled{
   opacity:.45;
   pointer-events:none;
 }
 
+/* Link peligroso opcional (si lo usas en HTML: class="nav-link danger") */
+.nav-link.danger:hover{
+  background: rgba(255,59,59,.12);
+  border-color: rgba(255,59,59,.35);
+  color: rgba(255,255,255,.95);
+  box-shadow: 0 12px 30px rgba(255,59,59,.10);
+}
+
+/* BOTÓN CERRAR SESIÓN (hover ROJO) */
 .logout-btn{
   border: 1px solid rgba(255,255,255,.12);
   background: rgba(255,255,255,.06);
@@ -125,9 +184,18 @@
   font-weight: 850;
   transition: transform .15s ease, background .15s ease;
 }
+
 .logout-btn:hover{
-  background: rgba(255,255,255,.08);
+  background: linear-gradient(180deg, rgba(255,90,90,.95), rgba(255,59,59,.92));
+  border-color: rgba(255,59,59,.55);
+  color: var(--dangerText);
+  box-shadow: 0 14px 40px rgba(255,59,59,.18), 0 18px 55px rgba(0,0,0,.35);
   transform: translateY(-1px);
+}
+
+.logout-btn:active{
+  transform: translateY(0);
+  filter: brightness(.98);
 }
 
 /* ===== MOBILE: solo hamburguesa, menú oculto hasta click ===== */
@@ -165,6 +233,18 @@
     flex: 0 0 auto;
   }
 
+  .nav-toggle-btn:hover{
+    background: rgba(255,255,255,.06);
+    border-color: rgba(255,255,255,.18);
+    box-shadow: 0 14px 40px rgba(0,0,0,.30);
+    transform: translateY(-1px);
+  }
+
+  .nav-toggle-btn:active{
+    transform: translateY(0);
+    filter: brightness(.98);
+  }
+
   .nav-toggle-btn span{
     width: 20px;
     height: 2px;
@@ -196,6 +276,9 @@
     opacity: 0;
     transform: translateY(-8px);
     pointer-events: none;
+
+    /* animación al abrir/cerrar */
+    transition: opacity .18s ease, transform .18s ease;
   }
 
   /* Menú en columna */
@@ -212,6 +295,13 @@
     background: rgba(255,255,255,.06);
     border: 1px solid rgba(255,255,255,.08);
     transform: none;
+    box-shadow: none;
+  }
+
+  .nav-link:hover{
+    transform: none;
+    box-shadow: 0 10px 26px rgba(0,0,0,.22);
+    background: rgba(255,255,255,.08);
   }
 
   .nav-right{ width:100%; }
@@ -238,5 +328,16 @@
   }
   .nav-toggle:checked + .nav-toggle-btn span:nth-child(3){
     transform: translateY(-7px) rotate(-45deg);
+  }
+}
+
+/* Accesibilidad: reducir animaciones */
+@media (prefers-reduced-motion: reduce){
+  .nav-link,
+  .logout-btn,
+  .nav-toggle-btn,
+  .search-form button,
+  .nav-dropdown{
+    transition: none !important;
   }
 }
