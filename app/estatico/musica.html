@@ -30,10 +30,22 @@
                 {% for cancion in canciones %}
                 <li onclick="playSong({{ loop.index0 }})" class="song-row" data-index="{{ loop.index0 }}">
                     <span class="track-num">{{ loop.index }}</span>
+
+                    <!-- Mini ecualizador (solo visible en activa con CSS) -->
+                    <span class="mini-eq" aria-hidden="true">
+                        <span></span><span></span><span></span>
+                    </span>
+
                     <div class="track-meta">
                         <span class="track-name">{{ cancion.titulo }}</span>
                         <span class="track-sub">MASTER • 192kHz</span>
                     </div>
+
+                    <!-- ✅ Añadir a cola (no dispara play) -->
+                    <button class="queue-add-btn" type="button" data-index="{{ loop.index0 }}" title="Añadir a cola">
+                        <i class="fas fa-plus"></i>
+                    </button>
+
                     <i class="fas fa-heart like-btn" data-index="{{ loop.index0 }}"></i>
                 </li>
                 {% endfor %}
@@ -43,7 +55,6 @@
 
     <!-- PLAYER CENTER -->
     <section class="player-center">
-
         <div class="card-glass-effect">
 
             <div class="now-playing-pfp">
@@ -66,12 +77,11 @@
                 <span id="time-current">0:00</span>
                 <div class="track-slider" id="progress-container">
                     <div class="track-fill" id="progress-bar"></div>
-                    <!-- Tooltip se inyecta por JS (sin romper layout) -->
+                    <!-- Tooltip/Thumb se inyecta por JS -->
                 </div>
                 <span id="time-total">0:00</span>
             </div>
 
-            <!-- NUEVA FILA DE ACCIONES -->
             <div class="track-actions">
                 <button id="like-current" class="action-btn">
                     <i class="fas fa-heart"></i> Favorito
@@ -83,15 +93,30 @@
             </div>
 
             <div class="controls-master">
-                <i class="fas fa-random control-btn" id="shuffle-btn"></i>
-                <i class="fas fa-backward-step control-btn" id="prev-btn"></i>
+                <i class="fas fa-random control-btn" id="shuffle-btn" title="Aleatorio"></i>
+                <i class="fas fa-backward-step control-btn" id="prev-btn" title="Anterior"></i>
 
-                <div class="play-trigger" id="play-btn">
+                <div class="play-trigger" id="play-btn" title="Play/Pause">
                     <i class="fas fa-play"></i>
                 </div>
 
-                <i class="fas fa-forward-step control-btn" id="next-btn"></i>
-                <i class="fas fa-redo control-btn" id="repeat-btn"></i>
+                <i class="fas fa-forward-step control-btn" id="next-btn" title="Siguiente"></i>
+                <i class="fas fa-redo control-btn" id="repeat-btn" title="Repetir"></i>
+
+                <!-- ✅ Botón Cola (tres rayas) -->
+                <i class="fas fa-bars control-btn" id="queue-btn" title="Cola"></i>
+            </div>
+
+            <!-- ✅ Desplegable de cola -->
+            <div class="queue-dropdown" id="queue-dropdown" aria-hidden="true">
+                <div class="queue-dd-header">
+                    <span>COLA</span>
+                    <button id="queue-clear" type="button" class="queue-clear-btn">Vaciar</button>
+                </div>
+                <ul id="queue-list" class="queue-dd-list"></ul>
+                <div class="queue-dd-footer">
+                    <span id="queue-count">0 en cola</span>
+                </div>
             </div>
 
             <div class="volume-ui">
@@ -100,7 +125,6 @@
                 <i class="fas fa-volume-up"></i>
             </div>
         </div>
-
     </section>
 
     <!-- PANEL DERECHO -->
@@ -119,6 +143,9 @@
     <audio id="audio-player" crossorigin="anonymous"></audio>
 
 </main>
+
+<!-- ✅ Toast -->
+<div id="toast" class="toast" aria-live="polite"></div>
 
 <script>const SONGS = {{ canciones | tojson }};</script>
 <script src="/script/musica.js"></script>

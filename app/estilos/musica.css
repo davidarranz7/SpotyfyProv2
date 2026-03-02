@@ -119,6 +119,49 @@ body.ultra-dark{
 .song-row.active .track-sub{
     opacity:0.85;
 }
+/* ================= MINI EQUALIZER (NUEVO) ================= */
+
+.mini-eq{
+    width:14px;
+    height:14px;
+    display:none;                 /* solo aparece en activa */
+    align-items:flex-end;
+    gap:3px;
+    margin-right:2px;
+    opacity:0.95;
+}
+
+.mini-eq span{
+    width:3px;
+    height:6px;
+    border-radius:3px;
+    background:linear-gradient(to top,#1db954,#1ed760);
+    box-shadow:0 0 10px rgba(29,185,84,0.35);
+    transform-origin:bottom;
+}
+
+/* Mostrar en la canción activa */
+.song-row.active .mini-eq{
+    display:flex;
+}
+
+/* Animación SOLO si está reproduciendo */
+.song-row.active.is-playing .mini-eq span{
+    animation: miniEqBounce 0.75s ease-in-out infinite;
+}
+
+/* Desfase para efecto real */
+.song-row.active.is-playing .mini-eq span:nth-child(2){
+    animation-delay: 0.12s;
+}
+.song-row.active.is-playing .mini-eq span:nth-child(3){
+    animation-delay: 0.24s;
+}
+
+@keyframes miniEqBounce{
+    0%, 100% { height: 4px; opacity: 0.85; }
+    50%      { height: 14px; opacity: 1; }
+}
 
 /* ================= PLAYER CENTER ================= */
 
@@ -463,4 +506,205 @@ body.ultra-dark{
         width: 120px;
     }
 
+}
+/* ================= MINI EQUALIZER ================= */
+
+.mini-eq{
+    width:14px;
+    height:14px;
+    display:none;
+    align-items:flex-end;
+    gap:3px;
+    opacity:0.95;
+}
+
+.mini-eq span{
+    width:3px;
+    height:6px;
+    border-radius:3px;
+    background:linear-gradient(to top,#1db954,#1ed760);
+    box-shadow:0 0 10px rgba(29,185,84,0.35);
+    transform-origin:bottom;
+}
+
+.song-row.active .mini-eq{ display:flex; }
+
+.song-row.active.is-playing .mini-eq span{
+    animation: miniEqBounce 0.75s ease-in-out infinite;
+}
+
+.song-row.active.is-playing .mini-eq span:nth-child(2){ animation-delay:0.12s; }
+.song-row.active.is-playing .mini-eq span:nth-child(3){ animation-delay:0.24s; }
+
+@keyframes miniEqBounce{
+    0%,100%{ height:4px; opacity:0.85; }
+    50%{ height:14px; opacity:1; }
+}
+
+/* ================= ADD TO QUEUE BUTTON (LISTA) ================= */
+
+.queue-add-btn{
+    margin-left:auto;
+    background:rgba(255,255,255,0.06);
+    border:none;
+    width:30px;
+    height:30px;
+    border-radius:10px;
+    color:white;
+    opacity:0.75;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    transition:0.25s;
+}
+
+.song-row:hover .queue-add-btn{
+    opacity:1;
+}
+
+.queue-add-btn:hover{
+    background:rgba(29,185,84,0.18);
+    color:#1ed760;
+}
+
+/* Ojo: tu .like-btn ya tiene margin-left:auto; ahora lo quitamos visualmente */
+.like-btn{
+    margin-left:10px;
+}
+
+/* ================= QUEUE DROPDOWN ================= */
+
+.card-glass-effect{
+    position:relative; /* para que el desplegable se ancle aquí */
+}
+
+.queue-dropdown{
+    position:absolute;
+    right:28px;
+    bottom:125px;
+    width:320px;
+    max-height:320px;
+    background:rgba(10,10,14,0.72);
+    border:1px solid rgba(255,255,255,0.08);
+    border-radius:18px;
+    backdrop-filter: blur(16px);
+    box-shadow:0 30px 70px rgba(0,0,0,0.55);
+    overflow:hidden;
+    display:none;
+    z-index:30;
+}
+
+.queue-dropdown.open{
+    display:block;
+}
+
+.queue-dd-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:14px 14px 10px 14px;
+    font-size:12px;
+    letter-spacing:2px;
+    opacity:0.9;
+}
+
+.queue-clear-btn{
+    background:rgba(255,255,255,0.08);
+    border:none;
+    color:white;
+    padding:6px 10px;
+    border-radius:10px;
+    font-size:11px;
+    cursor:pointer;
+    transition:0.2s;
+}
+
+.queue-clear-btn:hover{
+    background:white;
+    color:black;
+}
+
+.queue-dd-list{
+    list-style:none;
+    padding:6px 10px 10px 10px;
+    margin:0;
+    overflow:auto;
+    max-height:240px;
+}
+
+.queue-item{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:10px 10px;
+    border-radius:12px;
+    cursor:pointer;
+    transition:0.2s;
+}
+
+.queue-item:hover{
+    background:rgba(255,255,255,0.08);
+}
+
+.queue-item-title{
+    font-size:12px;
+    opacity:0.92;
+    flex:1;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+}
+
+.queue-item-actions{
+    display:flex;
+    gap:8px;
+}
+
+.queue-remove-btn{
+    background:rgba(255,255,255,0.08);
+    border:none;
+    color:white;
+    width:28px;
+    height:28px;
+    border-radius:10px;
+    cursor:pointer;
+    transition:0.2s;
+}
+
+.queue-remove-btn:hover{
+    background:rgba(255,70,70,0.2);
+    color:#ff6b6b;
+}
+
+.queue-dd-footer{
+    padding:10px 14px 14px 14px;
+    font-size:11px;
+    opacity:0.65;
+    border-top:1px solid rgba(255,255,255,0.06);
+}
+
+/* ================= TOAST ================= */
+
+.toast{
+    position:fixed;
+    left:50%;
+    bottom:26px;
+    transform:translateX(-50%);
+    background:rgba(0,0,0,0.85);
+    border:1px solid rgba(255,255,255,0.08);
+    color:white;
+    padding:10px 14px;
+    border-radius:14px;
+    opacity:0;
+    pointer-events:none;
+    transition:opacity 0.2s, transform 0.2s;
+    backdrop-filter: blur(10px);
+    z-index:999;
+    font-size:12px;
+}
+
+.toast.show{
+    opacity:1;
+    transform:translateX(-50%) translateY(-4px);
 }

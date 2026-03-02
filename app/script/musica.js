@@ -10,6 +10,14 @@ const vinyl = document.querySelector(".vinyl-record");
 
 const shuffleBtn = document.getElementById("shuffle-btn");
 const repeatBtn = document.getElementById("repeat-btn");
+const queueBtn = document.getElementById("queue-btn");
+
+const queueDropdown = document.getElementById("queue-dropdown");
+const queueListEl = document.getElementById("queue-list");
+const queueCountEl = document.getElementById("queue-count");
+const queueClearBtn = document.getElementById("queue-clear");
+
+const toastEl = document.getElementById("toast");
 
 const playIcon = playBtn.querySelector("i");
 
@@ -19,6 +27,10 @@ let repeat = false;
 
 let favorites = JSON.parse(localStorage.getItem("favorites")) || [];
 let playlist = JSON.parse(localStorage.getItem("playlist")) || [];
+
+// ✅ Cola persistente
+const QUEUE_KEY = "queue_v1";
+let queue = JSON.parse(localStorage.getItem(QUEUE_KEY)) || [];
 
 /* ===== VISUALIZER SETUP ===== */
 
@@ -30,7 +42,7 @@ for (let i = 0; i < 40; i++) {
     visualizer.appendChild(bar);
 }
 
-/* ===== TOOLTIP + THUMB (NUEVO) ===== */
+/* ===== TOOLTIP + THUMB ===== */
 
 const tooltip = document.createElement("div");
 tooltip.className = "progress-tooltip";
@@ -42,6 +54,8 @@ progressContainer.appendChild(thumb);
 
 let isDragging = false;
 let wasPlayingBeforeDrag = false;
+
+/* ===== AUDIO CONTEXT ===== */
 
 function initAudio() {
     if (audioCtx) return;
@@ -55,13 +69,166 @@ function initAudio() {
     analyser.connect(audioCtx.destination);
 }
 
-/* ===== ACTIVE SONG ROW ===== */
+/* ===== UI HELPERS ===== */
 
 function setActiveSongRow(index) {
-    document.querySelectorAll(".song-row").forEach(li => li.classList.remove("active"));
+    document.querySelectorAll(".song-row").forEach(li => li.classList.remove("active", "is-playing"));
     const active = document.querySelector(`.song-row[data-index="${index}"]`);
     if (active) active.classList.add("active");
 }
+
+function setPlayingState(isPlaying) {
+    const active = document.querySelector(`.song-row[data-index="${currentIndex}"]`);
+    if (active) active.classList.toggle("is-playing", isPlaying);
+}
+
+/* ===== TOAST ===== */
+
+let toastTimer;
+function showToast(msg) {
+    if (!toastEl) return;
+    toastEl.textContent = msg;
+    toastEl.classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toastEl.classList.remove("show"), 1200);
+}
+
+/* ===== QUEUE STORAGE ===== */
+
+function saveQueue() {
+    localStorage.setItem(QUEUE_KEY, JSON.stringify(queue));
+}
+
+function addToQueueByIndex(index) {
+    const song = SONGS[index];
+    if (!song) return;
+
+    queue.push({ titulo: song.titulo, url: song.url });
+    saveQueue();
+    renderQueue();
+    showToast("Añadida a cola ✅");
+}
+
+function removeFromQueue(pos) {
+    queue.splice(pos, 1);
+    saveQueue();
+    renderQueue();
+    showToast("Eliminada de cola 🗑️");
+}
+
+function clearQueue() {
+    queue = [];
+    saveQueue();
+    renderQueue();
+    showToast("Cola vaciada");
+}
+
+function renderQueue() {
+    if (!queueListEl || !queueCountEl) return;
+
+    queueListEl.innerHTML = "";
+
+    if (queue.length === 0) {
+        const li = document.createElement("li");
+        li.className = "queue-item";
+        li.style.cursor = "default";
+        li.innerHTML = `<span class="queue-item-title" style="opacity:.7">No hay canciones en cola</span>`;
+        queueListEl.appendChild(li);
+        queueCountEl.textContent = "0 en cola";
+        return;
+    }
+
+    queue.forEach((song, pos) => {
+        const li = document.createElement("li");
+        li.className = "queue-item";
+        li.dataset.pos = String(pos);
+
+        const title = document.createElement("span");
+        title.className = "queue-item-title";
+        title.textContent = song.titulo;
+
+        const actions = document.createElement("div");
+        actions.className = "queue-item-actions";
+
+        const removeBtn = document.createElement("button");
+        removeBtn.type = "button";
+        removeBtn.className = "queue-remove-btn";
+        removeBtn.title = "Quitar de cola";
+        removeBtn.innerHTML = `<i class="fas fa-xmark"></i>`;
+
+        removeBtn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            removeFromQueue(pos);
+        });
+
+        actions.appendChild(removeBtn);
+
+        li.appendChild(title);
+        li.appendChild(actions);
+
+        // Click en item -> reproducir ese elemento de cola y quitarlo
+        li.addEventListener("click", () => {
+            const picked = queue.splice(pos, 1)[0];
+            saveQueue();
+            renderQueue();
+
+            const idx = SONGS.findIndex(s => s.url === picked.url);
+            if (idx !== -1) playSong(idx);
+            else {
+                // fallback por si no existe en SONGS
+                audioPlayer.src = picked.url;
+                songTitle.textContent = picked.titulo;
+                audioPlayer.play();
+            }
+
+            showToast("Reproduciendo desde cola ▶️");
+        });
+
+        queueListEl.appendChild(li);
+    });
+
+    queueCountEl.textContent = `${queue.length} en cola`;
+}
+
+/* ===== QUEUE DROPDOWN TOGGLE ===== */
+
+function toggleQueueDropdown(forceState) {
+    const open = typeof forceState === "boolean"
+        ? forceState
+        : !queueDropdown.classList.contains("open");
+
+    queueDropdown.classList.toggle("open", open);
+    queueDropdown.setAttribute("aria-hidden", open ? "false" : "true");
+}
+
+queueBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    toggleQueueDropdown();
+});
+
+document.addEventListener("click", (e) => {
+    // cerrar si click fuera
+    if (queueDropdown.classList.contains("open")) {
+        const inside = queueDropdown.contains(e.target) || queueBtn.contains(e.target);
+        if (!inside) toggleQueueDropdown(false);
+    }
+});
+
+queueClearBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    clearQueue();
+});
+
+/* ===== ADD TO QUEUE BUTTONS IN LIST ===== */
+
+document.querySelectorAll(".queue-add-btn").forEach(btn => {
+    btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const idx = parseInt(btn.dataset.index, 10);
+        if (Number.isNaN(idx)) return;
+        addToQueueByIndex(idx);
+    });
+});
 
 /* ===== PLAY SONG ===== */
 
@@ -74,6 +241,7 @@ function playSong(index) {
     audioPlayer.play();
 
     setActiveSongRow(index);
+    setPlayingState(true);
     updateLists();
 }
 
@@ -83,14 +251,30 @@ playBtn.onclick = () =>
     audioPlayer.paused ? audioPlayer.play() : audioPlayer.pause();
 
 document.getElementById("next-btn").onclick = () => {
+    // ✅ primero cola
+    if (queue.length > 0) {
+        const nextFromQueue = queue.shift();
+        saveQueue();
+        renderQueue();
+
+        const idx = SONGS.findIndex(s => s.url === nextFromQueue.url);
+        if (idx !== -1) playSong(idx);
+        else {
+            audioPlayer.src = nextFromQueue.url;
+            songTitle.textContent = nextFromQueue.titulo;
+            audioPlayer.play();
+        }
+        showToast("Siguiente desde cola ▶️");
+        return;
+    }
+
+    // si no hay cola, tu lógica normal
     if (SONGS.length === 0) return;
 
     if (shuffle) {
         let next = currentIndex;
         if (SONGS.length > 1) {
-            while (next === currentIndex) {
-                next = Math.floor(Math.random() * SONGS.length);
-            }
+            while (next === currentIndex) next = Math.floor(Math.random() * SONGS.length);
         }
         currentIndex = next;
     } else {
@@ -106,9 +290,7 @@ document.getElementById("prev-btn").onclick = () => {
     if (shuffle) {
         let prev = currentIndex;
         if (SONGS.length > 1) {
-            while (prev === currentIndex) {
-                prev = Math.floor(Math.random() * SONGS.length);
-            }
+            while (prev === currentIndex) prev = Math.floor(Math.random() * SONGS.length);
         }
         currentIndex = prev;
     } else {
@@ -142,7 +324,6 @@ function getPosFromEvent(e) {
 }
 
 function setProgressUIByPos(pos) {
-    // UI inmediata (aunque no haya duration)
     progressBar.style.width = `${pos * 100}%`;
     thumb.style.left = `${pos * 100}%`;
 
@@ -168,7 +349,6 @@ audioPlayer.addEventListener("timeupdate", () => {
 audioPlayer.addEventListener("loadedmetadata", () => {
     timeTotal.textContent = formatTime(audioPlayer.duration);
 
-    // sincroniza thumb al cargar metadata
     if (audioPlayer.duration) {
         const pos = audioPlayer.currentTime / audioPlayer.duration;
         thumb.style.left = `${pos * 100}%`;
@@ -176,12 +356,10 @@ audioPlayer.addEventListener("loadedmetadata", () => {
     }
 });
 
-/* ===== CLICK SEEK (sigue funcionando) ===== */
+/* ===== CLICK SEEK ===== */
 
 progressContainer.addEventListener("click", (e) => {
-    // si estamos arrastrando, ignorar click final
     if (isDragging) return;
-
     if (!audioPlayer.duration || isNaN(audioPlayer.duration)) return;
 
     const pos = getPosFromEvent(e);
@@ -192,7 +370,7 @@ progressContainer.addEventListener("click", (e) => {
 /* ===== HOVER TOOLTIP ===== */
 
 progressContainer.addEventListener("mousemove", (e) => {
-    if (isDragging) return; // durante drag no mostramos tooltip
+    if (isDragging) return;
 
     const pos = getPosFromEvent(e);
 
@@ -211,7 +389,7 @@ progressContainer.addEventListener("mouseleave", () => {
     tooltip.style.opacity = 0;
 });
 
-/* ===== DRAG THUMB (NUEVO) ===== */
+/* ===== DRAG THUMB ===== */
 
 thumb.addEventListener("mousedown", (e) => {
     e.preventDefault();
@@ -221,8 +399,8 @@ thumb.addEventListener("mousedown", (e) => {
     tooltip.style.opacity = 0;
 
     wasPlayingBeforeDrag = !audioPlayer.paused;
-    // opcional: pausar mientras arrastras (sensación más pro)
     audioPlayer.pause();
+    setPlayingState(false);
 
     const pos = getPosFromEvent(e);
     setProgressUIByPos(pos);
@@ -248,11 +426,13 @@ document.addEventListener("mouseup", (e) => {
 
     isDragging = false;
 
-    // volver a reproducir si estaba sonando antes
-    if (wasPlayingBeforeDrag) audioPlayer.play();
+    if (wasPlayingBeforeDrag) {
+        audioPlayer.play();
+        setPlayingState(true);
+    }
 });
 
-/* Touch (móvil) */
+/* Touch */
 thumb.addEventListener("touchstart", (e) => {
     e.preventDefault();
     if (!audioPlayer.duration || isNaN(audioPlayer.duration)) return;
@@ -262,6 +442,7 @@ thumb.addEventListener("touchstart", (e) => {
 
     wasPlayingBeforeDrag = !audioPlayer.paused;
     audioPlayer.pause();
+    setPlayingState(false);
 
     const pos = getPosFromEvent(e);
     setProgressUIByPos(pos);
@@ -275,34 +456,46 @@ document.addEventListener("touchmove", (e) => {
     setProgressUIByPos(pos);
 }, { passive: false });
 
-document.addEventListener("touchend", (e) => {
+document.addEventListener("touchend", () => {
     if (!isDragging) return;
     if (!audioPlayer.duration || isNaN(audioPlayer.duration)) {
         isDragging = false;
         return;
     }
 
-    // en touchend no tenemos clientX fiable, usamos posición actual del thumb
     const left = parseFloat(thumb.style.left) || 0;
     const pos = clamp01(left / 100);
 
     audioPlayer.currentTime = pos * audioPlayer.duration;
 
     isDragging = false;
-    if (wasPlayingBeforeDrag) audioPlayer.play();
+    if (wasPlayingBeforeDrag) {
+        audioPlayer.play();
+        setPlayingState(true);
+    }
 });
 
 /* ===== AUTO NEXT ===== */
 
 audioPlayer.addEventListener("ended", () => {
+    setPlayingState(false);
+
     if (repeat) {
         playSong(currentIndex);
-    } else {
-        document.getElementById("next-btn").click();
+        return;
     }
+
+    // ✅ prioridad cola al terminar
+    if (queue.length > 0) {
+        document.getElementById("next-btn").click();
+        return;
+    }
+
+    // normal
+    document.getElementById("next-btn").click();
 });
 
-/* ===== VISUALIZER ANIMATION ===== */
+/* ===== VISUALIZER + ICONS ===== */
 
 audioPlayer.addEventListener("play", () => {
     initAudio();
@@ -311,6 +504,8 @@ audioPlayer.addEventListener("play", () => {
 
     playIcon.classList.remove("fa-play");
     playIcon.classList.add("fa-pause");
+
+    setPlayingState(true);
 });
 
 audioPlayer.addEventListener("pause", () => {
@@ -319,9 +514,13 @@ audioPlayer.addEventListener("pause", () => {
 
     playIcon.classList.remove("fa-pause");
     playIcon.classList.add("fa-play");
+
+    setPlayingState(false);
 });
 
 function animate() {
+    if (!analyser) return;
+
     const data = new Uint8Array(analyser.frequencyBinCount);
     analyser.getByteFrequencyData(data);
 
@@ -336,10 +535,11 @@ function animate() {
     animationId = requestAnimationFrame(animate);
 }
 
-/* ===== FAVORITOS ===== */
+/* ===== FAVORITOS / PLAYLIST ===== */
 
 document.getElementById("like-current").onclick = () => {
     const song = SONGS[currentIndex];
+    if (!song) return;
 
     if (!favorites.find(s => s.url === song.url)) {
         favorites.push(song);
@@ -350,6 +550,7 @@ document.getElementById("like-current").onclick = () => {
 
 document.getElementById("add-playlist").onclick = () => {
     const song = SONGS[currentIndex];
+    if (!song) return;
 
     if (!playlist.find(s => s.url === song.url)) {
         playlist.push(song);
@@ -385,6 +586,7 @@ function formatTime(secs) {
 }
 
 updateLists();
+renderQueue();
 
 /* ===== VOLUME CONTROL ===== */
 
