@@ -708,3 +708,60 @@ body.ultra-dark{
     opacity:1;
     transform:translateX(-50%) translateY(-4px);
 }
+/* --- MOBILE EXTRA (pantallas pequeñas reales) --- */
+@media (max-width: 480px){
+
+  body{
+    overflow-x: hidden;
+  }
+
+  #encabezado h1{
+    font-size: 2rem;
+    letter-spacing: -1px;
+  }
+
+  #encabezado .subtitulo{
+    font-size: .9rem;
+  }
+
+  .container-principal{
+    flex-direction: column;
+    gap: 14px;
+    padding-bottom: 40px;
+  }
+
+  /* Reducimos tamaño visual de la lámpara */
+  .lamp-wrapper{
+    transform: scale(.80);
+  }
+
+  /* Reducimos tamaño del glow para que no invada toda la pantalla */
+  .lamp-wrapper::after{
+    width: 380px;
+    height: 380px;
+  }
+
+  body[data-on="true"] .light-glow{
+    width: 380px;
+    height: 380px;
+  }
+
+  /* Card más compacta */
+  .seccion-auth{
+    width: 94vw;
+    padding: 20px;
+  }
+
+  .seccion-auth h2{
+    font-size: 1.4rem;
+  }
+
+  .seccion-auth input{
+    padding: 14px;
+  }
+
+  .seccion-auth button{
+    padding: 14px;
+  }
+
+}
