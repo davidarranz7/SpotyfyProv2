@@ -41,6 +41,52 @@ def obtener_db():
     finally:
         db.close()
 
+def _pretty_title_from_filename(name: str) -> str:
+    decoded = unquote(name)  # convierte %20 etc.
+    if decoded.lower().endswith(".mp3"):
+        decoded = decoded[:-4]
+    return decoded
+
+def listar_mp3_en_storage(bucket: str, prefix: str):
+    """
+    Lista MP3 en una ruta del bucket.
+    - prefix="" -> raíz del bucket
+    - prefix="usuario" -> carpeta del usuario
+    Devuelve: [{titulo, url}]
+    """
+    prefix = (prefix or "").strip("/")
+
+    # list("") lista la raíz; list("pepe") lista esa carpeta
+    items = supabase.storage.from_(bucket).list(prefix)
+
+    canciones = []
+    for it in items:
+        name = it.get("name")
+        if not name:
+            continue
+
+        # Ignora subcarpetas y archivos que no sean mp3
+        if not name.lower().endswith(".mp3"):
+            continue
+
+        titulo = _pretty_title_from_filename(name)
+        path = f"{prefix}/{name}" if prefix else name
+        url = supabase.storage.from_(bucket).get_public_url(path)
+
+        canciones.append({"titulo": titulo, "url": url})
+
+    return canciones
+
+def dedupe_songs_by_url(songs):
+    seen = set()
+    out = []
+    for s in songs:
+        url = s.get("url")
+        if not url or url in seen:
+            continue
+        seen.add(url)
+        out.append(s)
+    return out
 
 def require_login(request: Request):
     usuario = request.cookies.get("usuario")
@@ -96,30 +142,34 @@ def musica_page(
         db: Session = Depends(obtener_db),
         usuario_nombre: str = Depends(require_login)
 ):
-    canciones_predefinidas = [
-        {
-            "titulo": "Future Remix 98",
-            "url": "https://irqgevvipamnmepevgrk.supabase.co/storage/v1/object/public/MUSICA/Future%20Remix%2098.mp3"
-        },
-        {
-            "titulo": "Muska - Sexesexy",
-            "url": "https://irqgevvipamnmepevgrk.supabase.co/storage/v1/object/public/MUSICA/Muska%20badGyal-sexesexy%20.mp3"
-        },
-        {
-            "titulo": "Spada - Waiting",
-            "url": "https://irqgevvipamnmepevgrk.supabase.co/storage/v1/object/public/MUSICA/Spada%20-%20Waiting%20ft.%20Chiara%20Galiazzo%20(Official%20Visualizer).mp3"
-        }
-    ]
-    usuario_db = db.query(Usuario).filter(Usuario.nombre_usuario == usuario_nombre).first()
-    canciones_usuario = []
+    # 1) Generales: MP3 sueltos en la raíz del bucket
+    try:
+        canciones_generales = listar_mp3_en_storage("MUSICA", "")
+    except Exception as e:
+        print("Error listando canciones generales (raíz):", str(e))
+        canciones_generales = []
 
+    # 2) Carpeta del usuario en storage (MP3 metidos manualmente o existentes ahí)
+    try:
+        canciones_storage_usuario = listar_mp3_en_storage("MUSICA", usuario_nombre)
+    except Exception as e:
+        print("Error listando carpeta usuario en storage:", str(e))
+        canciones_storage_usuario = []
+
+    # 3) Canciones del usuario desde BD (las que guardas desde la app)
+    usuario_db = db.query(Usuario).filter(Usuario.nombre_usuario == usuario_nombre).first()
+    canciones_bd_usuario = []
     if usuario_db:
         for c in usuario_db.canciones:
-            canciones_usuario.append({
+            canciones_bd_usuario.append({
                 "titulo": c.titulo,
                 "url": c.url_archivo
             })
-    todas_las_canciones = canciones_predefinidas + canciones_usuario
+
+    # Mezcla + quita duplicados por URL
+    todas_las_canciones = dedupe_songs_by_url(
+        canciones_generales + canciones_storage_usuario + canciones_bd_usuario
+    )
 
     return templates.TemplateResponse(
         "musica.html",
@@ -129,7 +179,6 @@ def musica_page(
             "canciones": todas_las_canciones
         }
     )
-
 @app.post("/registro")
 def registrar_usuario(
     datos: RegistroUsuario,
