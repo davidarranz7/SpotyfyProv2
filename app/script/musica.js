@@ -8,7 +8,10 @@ const timeTotal = document.getElementById("time-total");
 const playBtn = document.getElementById("play-btn");
 const vinyl = document.querySelector(".vinyl-record");
 
-const playIcon = playBtn.querySelector("i"); // 🔥 NUEVO
+const shuffleBtn = document.getElementById("shuffle-btn");
+const repeatBtn = document.getElementById("repeat-btn");
+
+const playIcon = playBtn.querySelector("i");
 
 let currentIndex = 0;
 let shuffle = false;
@@ -27,6 +30,19 @@ for (let i = 0; i < 40; i++) {
     visualizer.appendChild(bar);
 }
 
+/* ===== TOOLTIP + THUMB (NUEVO) ===== */
+
+const tooltip = document.createElement("div");
+tooltip.className = "progress-tooltip";
+progressContainer.appendChild(tooltip);
+
+const thumb = document.createElement("div");
+thumb.className = "progress-thumb";
+progressContainer.appendChild(thumb);
+
+let isDragging = false;
+let wasPlayingBeforeDrag = false;
+
 function initAudio() {
     if (audioCtx) return;
 
@@ -39,6 +55,14 @@ function initAudio() {
     analyser.connect(audioCtx.destination);
 }
 
+/* ===== ACTIVE SONG ROW ===== */
+
+function setActiveSongRow(index) {
+    document.querySelectorAll(".song-row").forEach(li => li.classList.remove("active"));
+    const active = document.querySelector(`.song-row[data-index="${index}"]`);
+    if (active) active.classList.add("active");
+}
+
 /* ===== PLAY SONG ===== */
 
 function playSong(index) {
@@ -48,6 +72,8 @@ function playSong(index) {
     audioPlayer.src = SONGS[index].url;
     songTitle.textContent = SONGS[index].titulo;
     audioPlayer.play();
+
+    setActiveSongRow(index);
     updateLists();
 }
 
@@ -57,48 +83,214 @@ playBtn.onclick = () =>
     audioPlayer.paused ? audioPlayer.play() : audioPlayer.pause();
 
 document.getElementById("next-btn").onclick = () => {
+    if (SONGS.length === 0) return;
+
     if (shuffle) {
-        currentIndex = Math.floor(Math.random() * SONGS.length);
+        let next = currentIndex;
+        if (SONGS.length > 1) {
+            while (next === currentIndex) {
+                next = Math.floor(Math.random() * SONGS.length);
+            }
+        }
+        currentIndex = next;
     } else {
         currentIndex = (currentIndex + 1) % SONGS.length;
     }
+
     playSong(currentIndex);
 };
 
 document.getElementById("prev-btn").onclick = () => {
-    currentIndex = (currentIndex - 1 + SONGS.length) % SONGS.length;
+    if (SONGS.length === 0) return;
+
+    if (shuffle) {
+        let prev = currentIndex;
+        if (SONGS.length > 1) {
+            while (prev === currentIndex) {
+                prev = Math.floor(Math.random() * SONGS.length);
+            }
+        }
+        currentIndex = prev;
+    } else {
+        currentIndex = (currentIndex - 1 + SONGS.length) % SONGS.length;
+    }
+
     playSong(currentIndex);
 };
 
-document.getElementById("shuffle-btn").onclick = (e) => {
+shuffleBtn.onclick = () => {
     shuffle = !shuffle;
-    e.target.classList.toggle("liked");
+    shuffleBtn.classList.toggle("is-on", shuffle);
 };
 
-document.getElementById("repeat-btn").onclick = (e) => {
+repeatBtn.onclick = () => {
     repeat = !repeat;
-    e.target.classList.toggle("liked");
+    repeatBtn.classList.toggle("is-on", repeat);
 };
 
-/* ===== PROGRESS ===== */
+/* ===== PROGRESS HELPERS ===== */
+
+function clamp01(x) {
+    return Math.min(Math.max(x, 0), 1);
+}
+
+function getPosFromEvent(e) {
+    const rect = progressContainer.getBoundingClientRect();
+    const clientX = (e.touches && e.touches[0]) ? e.touches[0].clientX : e.clientX;
+    const pos = (clientX - rect.left) / rect.width;
+    return clamp01(pos);
+}
+
+function setProgressUIByPos(pos) {
+    // UI inmediata (aunque no haya duration)
+    progressBar.style.width = `${pos * 100}%`;
+    thumb.style.left = `${pos * 100}%`;
+
+    if (audioPlayer.duration && !isNaN(audioPlayer.duration)) {
+        const hoverTime = pos * audioPlayer.duration;
+        timeCurrent.textContent = formatTime(hoverTime);
+    }
+}
+
+/* ===== PROGRESS UPDATE ===== */
 
 audioPlayer.addEventListener("timeupdate", () => {
     const { currentTime, duration } = audioPlayer;
     if (!duration) return;
 
-    progressBar.style.width = `${(currentTime / duration) * 100}%`;
+    const pos = currentTime / duration;
+    progressBar.style.width = `${pos * 100}%`;
+    thumb.style.left = `${pos * 100}%`;
+
     timeCurrent.textContent = formatTime(currentTime);
 });
 
 audioPlayer.addEventListener("loadedmetadata", () => {
     timeTotal.textContent = formatTime(audioPlayer.duration);
+
+    // sincroniza thumb al cargar metadata
+    if (audioPlayer.duration) {
+        const pos = audioPlayer.currentTime / audioPlayer.duration;
+        thumb.style.left = `${pos * 100}%`;
+        progressBar.style.width = `${pos * 100}%`;
+    }
 });
 
-progressContainer.onclick = (e) => {
-    const rect = progressContainer.getBoundingClientRect();
-    const pos = (e.clientX - rect.left) / rect.width;
+/* ===== CLICK SEEK (sigue funcionando) ===== */
+
+progressContainer.addEventListener("click", (e) => {
+    // si estamos arrastrando, ignorar click final
+    if (isDragging) return;
+
+    if (!audioPlayer.duration || isNaN(audioPlayer.duration)) return;
+
+    const pos = getPosFromEvent(e);
     audioPlayer.currentTime = pos * audioPlayer.duration;
-};
+    tooltip.style.opacity = 0;
+});
+
+/* ===== HOVER TOOLTIP ===== */
+
+progressContainer.addEventListener("mousemove", (e) => {
+    if (isDragging) return; // durante drag no mostramos tooltip
+
+    const pos = getPosFromEvent(e);
+
+    if (!audioPlayer.duration || isNaN(audioPlayer.duration)) {
+        tooltip.style.opacity = 0;
+        return;
+    }
+
+    const hoverTime = pos * audioPlayer.duration;
+    tooltip.textContent = formatTime(hoverTime);
+    tooltip.style.left = `${pos * 100}%`;
+    tooltip.style.opacity = 1;
+});
+
+progressContainer.addEventListener("mouseleave", () => {
+    tooltip.style.opacity = 0;
+});
+
+/* ===== DRAG THUMB (NUEVO) ===== */
+
+thumb.addEventListener("mousedown", (e) => {
+    e.preventDefault();
+    if (!audioPlayer.duration || isNaN(audioPlayer.duration)) return;
+
+    isDragging = true;
+    tooltip.style.opacity = 0;
+
+    wasPlayingBeforeDrag = !audioPlayer.paused;
+    // opcional: pausar mientras arrastras (sensación más pro)
+    audioPlayer.pause();
+
+    const pos = getPosFromEvent(e);
+    setProgressUIByPos(pos);
+});
+
+document.addEventListener("mousemove", (e) => {
+    if (!isDragging) return;
+    if (!audioPlayer.duration || isNaN(audioPlayer.duration)) return;
+
+    const pos = getPosFromEvent(e);
+    setProgressUIByPos(pos);
+});
+
+document.addEventListener("mouseup", (e) => {
+    if (!isDragging) return;
+    if (!audioPlayer.duration || isNaN(audioPlayer.duration)) {
+        isDragging = false;
+        return;
+    }
+
+    const pos = getPosFromEvent(e);
+    audioPlayer.currentTime = pos * audioPlayer.duration;
+
+    isDragging = false;
+
+    // volver a reproducir si estaba sonando antes
+    if (wasPlayingBeforeDrag) audioPlayer.play();
+});
+
+/* Touch (móvil) */
+thumb.addEventListener("touchstart", (e) => {
+    e.preventDefault();
+    if (!audioPlayer.duration || isNaN(audioPlayer.duration)) return;
+
+    isDragging = true;
+    tooltip.style.opacity = 0;
+
+    wasPlayingBeforeDrag = !audioPlayer.paused;
+    audioPlayer.pause();
+
+    const pos = getPosFromEvent(e);
+    setProgressUIByPos(pos);
+}, { passive: false });
+
+document.addEventListener("touchmove", (e) => {
+    if (!isDragging) return;
+    if (!audioPlayer.duration || isNaN(audioPlayer.duration)) return;
+
+    const pos = getPosFromEvent(e);
+    setProgressUIByPos(pos);
+}, { passive: false });
+
+document.addEventListener("touchend", (e) => {
+    if (!isDragging) return;
+    if (!audioPlayer.duration || isNaN(audioPlayer.duration)) {
+        isDragging = false;
+        return;
+    }
+
+    // en touchend no tenemos clientX fiable, usamos posición actual del thumb
+    const left = parseFloat(thumb.style.left) || 0;
+    const pos = clamp01(left / 100);
+
+    audioPlayer.currentTime = pos * audioPlayer.duration;
+
+    isDragging = false;
+    if (wasPlayingBeforeDrag) audioPlayer.play();
+});
 
 /* ===== AUTO NEXT ===== */
 
@@ -117,7 +309,6 @@ audioPlayer.addEventListener("play", () => {
     vinyl.style.animationPlayState = "running";
     animate();
 
-    // 🔥 CAMBIO ICONO A PAUSE
     playIcon.classList.remove("fa-play");
     playIcon.classList.add("fa-pause");
 });
@@ -126,7 +317,6 @@ audioPlayer.addEventListener("pause", () => {
     vinyl.style.animationPlayState = "paused";
     cancelAnimationFrame(animationId);
 
-    // 🔥 CAMBIO ICONO A PLAY
     playIcon.classList.remove("fa-pause");
     playIcon.classList.add("fa-play");
 });
@@ -199,11 +389,8 @@ updateLists();
 /* ===== VOLUME CONTROL ===== */
 
 const volumeSlider = document.getElementById("volume-slider");
-
-// Volumen inicial
 audioPlayer.volume = volumeSlider.value;
 
-// Cuando mueves la barra
 volumeSlider.addEventListener("input", () => {
     audioPlayer.volume = volumeSlider.value;
 });

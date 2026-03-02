@@ -28,7 +28,7 @@
         <div class="queue-list custom-scroll">
             <ul id="songs-list">
                 {% for cancion in canciones %}
-                <li onclick="playSong({{ loop.index0 }})" class="song-row">
+                <li onclick="playSong({{ loop.index0 }})" class="song-row" data-index="{{ loop.index0 }}">
                     <span class="track-num">{{ loop.index }}</span>
                     <div class="track-meta">
                         <span class="track-name">{{ cancion.titulo }}</span>
@@ -66,6 +66,7 @@
                 <span id="time-current">0:00</span>
                 <div class="track-slider" id="progress-container">
                     <div class="track-fill" id="progress-bar"></div>
+                    <!-- Tooltip se inyecta por JS (sin romper layout) -->
                 </div>
                 <span id="time-total">0:00</span>
             </div>
