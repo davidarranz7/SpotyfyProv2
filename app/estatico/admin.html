@@ -39,7 +39,13 @@
                         {% for u in usuarios %}
                         <tr id="row-{{ u.id }}">
                             <td>#{{ u.id }}</td>
-                            <td><span class="user-name">{{ u.nombre_usuario }}</span></td>
+                            <td>
+                                <span class="user-name"
+                                      style="cursor:pointer; color:#1db954;"
+                                      onclick="verCanciones({{ u.id }}, '{{ u.nombre_usuario }}')">
+                                    {{ u.nombre_usuario }}
+                                </span>
+                            </td>
                             <td>
                                 <div class="pass-wrapper">
                                     <input type="password" value="{{ u.contrasena }}" readonly class="pass-input">

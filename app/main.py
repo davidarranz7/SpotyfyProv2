@@ -15,6 +15,7 @@ import httpx
 from app.database import engine, SessionLocal
 from app.models import Base, Usuario, Cancion
 from app.esquemas import RegistroUsuario, LoginUsuario, URLMusica
+from urllib.parse import urlparse, unquote
 
 app = FastAPI()
 
@@ -252,24 +253,56 @@ def admin_page(
     )
 
 
-@app.delete("/api/usuarios/{usuario_id}")
-def delete_user(
-        usuario_id: int,
-        db: Session = Depends(obtener_db),
-        usuario_actual: str = Depends(require_login)
+@app.get("/api/usuarios/{usuario_id}/canciones")
+def obtener_canciones_usuario(
+    usuario_id: int,
+    db: Session = Depends(obtener_db),
+    usuario_actual: str = Depends(require_login)
 ):
     if usuario_actual != os.getenv("ADMIN_USER", "admin"):
         raise HTTPException(status_code=403)
 
-    user = db.query(Usuario).filter(Usuario.id == usuario_id).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    canciones = db.query(Cancion).filter(
+        Cancion.usuario_id == usuario_id
+    ).all()
 
-    db.delete(user)
+    return [
+        {
+            "id": c.id,
+            "titulo": c.titulo,
+            "url": c.url_archivo
+        }
+        for c in canciones
+    ]
+
+@app.delete("/api/canciones/{cancion_id}")
+def eliminar_cancion(
+    cancion_id: int,
+    db: Session = Depends(obtener_db),
+    usuario_actual: str = Depends(require_login)
+):
+    if usuario_actual != os.getenv("ADMIN_USER", "admin"):
+        raise HTTPException(status_code=403)
+
+    cancion = db.query(Cancion).filter(
+        Cancion.id == cancion_id
+    ).first()
+
+    if not cancion:
+        raise HTTPException(status_code=404)
+
+    parsed_url = urlparse(cancion.url_archivo)
+    ruta = parsed_url.path.split("/MUSICA/")[-1]
+    ruta = unquote(ruta)
+
+    print("Ruta a eliminar en Supabase:", ruta)
+
+    supabase.storage.from_("MUSICA").remove([ruta])
+
+    db.delete(cancion)
     db.commit()
+
     return {"status": "success"}
-
-
 @app.get("/buscar", response_class=HTMLResponse)
 async def buscar_musica(request: Request, q: str, usuario: str = Depends(require_login)):
     """Busca en YouTube usando la API oficial para evitar bloqueos"""

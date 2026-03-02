@@ -1,17 +1,24 @@
 :root {
-    --bg-dark: #121212;
-    --bg-card: #181818;
-    --spotify-green: #1DB954;
-    --text-main: #FFFFFF;
-    --text-muted: #B3B3B3;
-    --danger: #e74c3c;
+    --bg-main: #0c0f14;
+    --bg-sidebar: #0a0d12;
+    --bg-card: #121722;
+    --bg-hover: #1a2130;
+    --accent: #1DB954;
+    --accent-soft: #1ed760;
+    --danger: #ff4d4d;
+    --text-main: #ffffff;
+    --text-muted: #8b93a7;
+    --border: rgba(255,255,255,0.06);
 }
 
+/* ===== GLOBAL ===== */
+
 body {
-    background-color: var(--bg-dark);
-    color: var(--text-main);
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     margin: 0;
+    background: radial-gradient(circle at top left, #121826, #0c0f14);
+    color: var(--text-main);
+    font-family: "Inter", "Segoe UI", sans-serif;
+    -webkit-font-smoothing: antialiased;
 }
 
 .admin-wrapper {
@@ -19,49 +26,92 @@ body {
     min-height: 100vh;
 }
 
-/* Sidebar */
+/* ===== SIDEBAR ===== */
+
 .sidebar {
-    width: 240px;
-    background-color: #000;
-    padding: 20px;
+    width: 260px;
+    background: linear-gradient(180deg, #0a0d12, #0f1420);
+    padding: 35px 25px;
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
 }
 
 .logo {
-    font-size: 24px;
-    font-weight: bold;
-    color: var(--spotify-green);
-    margin-bottom: 40px;
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--accent);
     display: flex;
     align-items: center;
     gap: 10px;
+    letter-spacing: 1px;
 }
 
 .nav-item {
-    display: block;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 15px;
+    border-radius: 10px;
     color: var(--text-muted);
     text-decoration: none;
-    padding: 12px;
-    border-radius: 4px;
-    transition: 0.3s;
+    transition: all 0.25s ease;
 }
 
-.nav-item:hover, .nav-item.active {
-    color: #fff;
-    background: #282828;
+.nav-item:hover,
+.nav-item.active {
+    background: var(--bg-hover);
+    color: var(--text-main);
+    transform: translateX(5px);
 }
 
-/* Main Content */
+/* ===== MAIN ===== */
+
 .main-content {
     flex: 1;
-    padding: 40px;
+    padding: 50px 60px;
 }
 
-.table-container {
-    background: var(--bg-card);
-    border-radius: 8px;
-    padding: 20px;
-    margin-top: 20px;
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
+
+header h1 {
+    font-size: 28px;
+    font-weight: 600;
+}
+
+.admin-badge {
+    background: rgba(29,185,84,0.12);
+    color: var(--accent);
+    padding: 8px 16px;
+    border-radius: 30px;
+    font-size: 14px;
+    border: 1px solid rgba(29,185,84,0.3);
+}
+
+/* ===== TABLE CARD ===== */
+
+.table-container {
+    margin-top: 40px;
+    background: var(--bg-card);
+    border-radius: 18px;
+    padding: 30px;
+    border: 1px solid var(--border);
+    box-shadow:
+        0 10px 40px rgba(0,0,0,0.4),
+        inset 0 1px 0 rgba(255,255,255,0.03);
+    transition: transform 0.3s ease;
+}
+
+.table-container:hover {
+    transform: translateY(-4px);
+}
+
+/* ===== TABLE ===== */
 
 .user-table {
     width: 100%;
@@ -71,98 +121,156 @@ body {
 .user-table th {
     text-align: left;
     color: var(--text-muted);
-    border-bottom: 1px solid #333;
-    padding: 15px;
+    font-weight: 500;
+    font-size: 13px;
+    letter-spacing: 1px;
+    padding: 18px;
+    border-bottom: 1px solid var(--border);
 }
 
 .user-table td {
-    padding: 15px;
-    border-bottom: 1px solid #282828;
+    padding: 20px 18px;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    transition: background 0.2s ease;
 }
 
-/* Password and Buttons */
+.user-table tr:hover {
+    background: rgba(255,255,255,0.02);
+}
+
+/* ===== PASSWORD FIELD ===== */
+
 .pass-wrapper {
     display: flex;
     align-items: center;
-    background: #2a2a2a;
-    border-radius: 4px;
-    padding: 5px 10px;
+    background: #1a2130;
+    border-radius: 10px;
+    padding: 6px 12px;
 }
 
 .pass-input {
     background: transparent;
     border: none;
-    color: #fff;
-    width: 100px;
+    color: var(--text-main);
+    outline: none;
+    width: 120px;
 }
 
-.toggle-pass, .btn-delete {
+.toggle-pass {
     background: none;
     border: none;
     color: var(--text-muted);
     cursor: pointer;
-    transition: 0.2s;
+    transition: 0.2s ease;
 }
 
-.toggle-pass:hover { color: var(--spotify-green); }
+.toggle-pass:hover {
+    color: var(--accent);
+}
+
+/* ===== BUTTONS ===== */
 
 .btn-delete {
-    color: var(--danger);
-    padding: 8px 12px;
+    background: transparent;
     border: 1px solid var(--danger);
-    border-radius: 20px;
+    color: var(--danger);
+    padding: 8px 16px;
+    border-radius: 25px;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    font-weight: 500;
 }
 
 .btn-delete:hover {
     background: var(--danger);
     color: white;
+    transform: scale(1.05);
 }
 
-/* --- RESPONSIVE DESIGN --- */
+.btn-delete-song {
+    background: none;
+    border: none;
+    color: var(--danger);
+    cursor: pointer;
+    font-size: 15px;
+    transition: 0.2s ease;
+}
 
-@media (max-width: 768px) {
+.btn-delete-song:hover {
+    transform: scale(1.2);
+    color: #ff6b6b;
+}
+
+/* ===== SONG EXPAND SECTION ===== */
+
+.song-container {
+    margin-top: 15px;
+    background: #161c28;
+    border-radius: 14px;
+    padding: 20px;
+    border: 1px solid var(--border);
+    animation: fadeSlide 0.3s ease;
+}
+
+.song-container h3 {
+    margin: 0 0 15px 0;
+    font-weight: 500;
+    color: var(--accent);
+}
+
+.song-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.song-list li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    font-size: 14px;
+}
+
+/* ===== ANIMATIONS ===== */
+
+@keyframes fadeSlide {
+    from {
+        opacity: 0;
+        transform: translateY(-6px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ===== RESPONSIVE ===== */
+
+@media (max-width: 900px) {
+
     .admin-wrapper {
-        flex-direction: column; /* La barra lateral se pone arriba */
+        flex-direction: column;
     }
 
     .sidebar {
         width: 100%;
-        box-sizing: border-box;
-        padding: 15px;
-        display: flex;
+        flex-direction: row;
         justify-content: space-between;
         align-items: center;
-    }
-
-    .logo {
-        margin-bottom: 0;
-        font-size: 20px;
-    }
-
-    nav {
-        display: flex;
-        gap: 10px;
-    }
-
-    .main-content {
         padding: 20px;
     }
 
-    header h1 {
-        font-size: 22px;
+    .main-content {
+        padding: 25px;
     }
 
-    /* Hacer que la tabla se pueda deslizar lateralmente sin romper la web */
     .table-container {
         overflow-x: auto;
-        padding: 10px;
     }
 
     .user-table {
-        min-width: 600px; /* Asegura que la tabla mantenga su forma al deslizar */
-    }
-
-    .pass-input {
-        width: 80px; /* Un poco más pequeña para ahorrar espacio */
+        min-width: 650px;
     }
 }

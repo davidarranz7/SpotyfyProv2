@@ -3,35 +3,45 @@
 ============================================================ */
 const audio = document.getElementById("audio");
 const bigTitle = document.getElementById("big-title");
-const prevBtn = document.getElementById("prev");
-const nextBtn = document.getElementById("next");
+const playBtn = document.getElementById("play-btn");
+const vinyl = document.querySelector(".vinyl-record");
+const progressBar = document.getElementById("progress-bar");
+const progressContainer = document.getElementById("progress-container");
+const timeCurrent = document.getElementById("time-current");
+const timeTotal = document.getElementById("time-total");
+const volumeSlider = document.getElementById("volume-slider");
 const visualizer = document.getElementById("audio-visualizer");
 
+/* ============================================================
+   AUDIO CONTEXT
+============================================================ */
 let audioCtx = null;
 let analyser = null;
 let source = null;
+let animationId = null;
 
-const barsCount = 30;
+const barsCount = 40;
 
 /* ============================================================
    CREAR BARRAS
 ============================================================ */
 function crearBarras() {
+    if (!visualizer) return;
+
     visualizer.innerHTML = "";
     for (let i = 0; i < barsCount; i++) {
         const bar = document.createElement("div");
-        bar.style.height = "4px";
+        bar.style.height = "6px";
         visualizer.appendChild(bar);
     }
 }
-
 crearBarras();
 
 /* ============================================================
    INICIALIZAR AUDIO CONTEXT
 ============================================================ */
 async function initAudio() {
-    // Si ya existe, solo nos aseguramos de que no esté suspendido
+
     if (audioCtx) {
         if (audioCtx.state === "suspended") {
             await audioCtx.resume();
@@ -39,27 +49,24 @@ async function initAudio() {
         return;
     }
 
-    // Crear el contexto (necesita interacción del usuario para activarse)
     audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     analyser = audioCtx.createAnalyser();
-    analyser.fftSize = 64;
+    analyser.fftSize = 256;
 
-    // Conectar el elemento de audio al analizador
     source = audioCtx.createMediaElementSource(audio);
     source.connect(analyser);
     analyser.connect(audioCtx.destination);
-
-    console.log("AudioContext iniciado correctamente");
 }
 
 /* ============================================================
-   REPRODUCIR (CORREGIDO: ASYNC & UNMUTE)
+   REPRODUCIR
 ============================================================ */
 async function reproducir(url, titulo) {
+
     bigTitle.textContent = "Preparando...";
 
     try {
-        // IMPORTANTE: Intentar despertar el audio con el click del usuario
+
         await initAudio();
 
         const res = await fetch("/preparar-stream", {
@@ -71,89 +78,138 @@ async function reproducir(url, titulo) {
         const data = await res.json();
 
         if (!res.ok) {
-            alert(data.detail || "Error preparando la canción");
+            showToast(data.detail || "Error preparando la canción", "error");
             bigTitle.textContent = "Error";
             return;
         }
 
-        // Configuración del audio
         audio.pause();
         audio.src = data.url_stream;
-
-        // El crossOrigin es vital si usas AnalyserNode con URLs externas
         audio.crossOrigin = "anonymous";
-
         audio.load();
 
-        // Aseguramos que no esté muteado
-        audio.volume = 1.0;
+        audio.volume = volumeSlider ? volumeSlider.value : 1;
         audio.muted = false;
 
-        // Intentar reproducir
         await audio.play();
 
         bigTitle.textContent = titulo;
         window.rutaTemporal = data.ruta;
 
+        showToast("Reproduciendo", "success");
+
     } catch (err) {
-        console.error("Error en la reproducción:", err);
+        console.error(err);
         bigTitle.textContent = "Error al reproducir";
-
-        // Si el play falla por permisos, intentamos avisar
-        if (err.name === "NotAllowedError") {
-            alert("El navegador bloqueó el audio. Haz clic de nuevo.");
-        }
+        showToast("Error al reproducir", "error");
     }
 }
 
 /* ============================================================
-   VISUALIZADOR (ANIMACIÓN)
+   PLAY / PAUSE
 ============================================================ */
-function animate() {
-    if (!analyser || audio.paused) return;
-
-    const bars = visualizer.children;
-    const data = new Uint8Array(analyser.frequencyBinCount);
-
-    analyser.getByteFrequencyData(data);
-
-    for (let i = 0; i < bars.length; i++) {
-        const value = data[i] || 0;
-        const height = (value / 255) * 60; // Máximo 60px
-
-        if (bars[i]) {
-            bars[i].style.height = `${height}px`;
-            // Color dinámico tipo Spotify (verde que cambia según intensidad)
-            bars[i].style.background = `rgb(29, 185, ${84 + (value / 2)})`;
-        }
-    }
-
-    requestAnimationFrame(animate);
+if (playBtn) {
+    playBtn.onclick = () => {
+        audio.paused ? audio.play() : audio.pause();
+    };
 }
 
-/* ============================================================
-   EVENTOS AUDIO
-============================================================ */
 audio.addEventListener("play", () => {
+    if (vinyl) vinyl.style.animationPlayState = "running";
     animate();
+    if (playBtn) playBtn.innerHTML = '<i class="fas fa-pause"></i>';
+});
+
+audio.addEventListener("pause", () => {
+    if (vinyl) vinyl.style.animationPlayState = "paused";
+    cancelAnimationFrame(animationId);
+    if (playBtn) playBtn.innerHTML = '<i class="fas fa-play"></i>';
 });
 
 audio.addEventListener("ended", () => {
+    if (vinyl) vinyl.style.animationPlayState = "paused";
+    if (playBtn) playBtn.innerHTML = '<i class="fas fa-play"></i>';
+
     bigTitle.textContent = "Selecciona una canción";
-    // Reset de las barras al terminar
-    const bars = visualizer.children;
-    for (let bar of bars) {
-        bar.style.height = "4px";
-    }
+
+    resetVisualizer();
 });
 
 /* ============================================================
-   CONFIRMAR CANCIÓN
+   VISUALIZADOR
+============================================================ */
+function animate() {
+
+    if (!analyser || audio.paused) return;
+
+    const data = new Uint8Array(analyser.frequencyBinCount);
+    analyser.getByteFrequencyData(data);
+
+    const bars = visualizer.children;
+
+    for (let i = 0; i < bars.length; i++) {
+        const value = data[i] || 0;
+        const height = (value / 255) * 60;
+
+        if (bars[i]) {
+            bars[i].style.height = `${Math.max(6, height)}px`;
+        }
+    }
+
+    animationId = requestAnimationFrame(animate);
+}
+
+function resetVisualizer(){
+    if (!visualizer) return;
+    const bars = visualizer.children;
+    for (let bar of bars) {
+        bar.style.height = "6px";
+    }
+}
+
+/* ============================================================
+   PROGRESS BAR
+============================================================ */
+audio.addEventListener("timeupdate", () => {
+
+    if (!audio.duration) return;
+
+    const percent = (audio.currentTime / audio.duration) * 100;
+
+    if (progressBar) progressBar.style.width = percent + "%";
+    if (timeCurrent) timeCurrent.textContent = formatTime(audio.currentTime);
+});
+
+audio.addEventListener("loadedmetadata", () => {
+    if (timeTotal) timeTotal.textContent = formatTime(audio.duration);
+});
+
+if (progressContainer) {
+    progressContainer.onclick = (e) => {
+        const rect = progressContainer.getBoundingClientRect();
+        const pos = (e.clientX - rect.left) / rect.width;
+        audio.currentTime = pos * audio.duration;
+    };
+}
+
+/* ============================================================
+   VOLUMEN
+============================================================ */
+if (volumeSlider) {
+    audio.volume = volumeSlider.value;
+
+    volumeSlider.addEventListener("input", () => {
+        audio.volume = volumeSlider.value;
+    });
+}
+
+/* ============================================================
+   AÑADIR CANCIÓN
 ============================================================ */
 async function añadirCancion() {
 
     if (!window.rutaTemporal) {
-        alert("Primero reproduce la canción");
+        showToast("Primero reproduce la canción", "error");
         return;
     }
 
@@ -172,28 +228,49 @@ async function añadirCancion() {
         const data = await res.json();
 
         if (!res.ok) {
-            alert(data.detail || "Error al guardar");
+            showToast(data.detail || "Error al guardar", "error");
             return;
         }
 
-        // 👇 AQUÍ ESTÁ EL CAMBIO
-        alert(data.mensaje);
-
+        showToast(data.mensaje, "success");
         window.rutaTemporal = null;
 
     } catch (err) {
         console.error(err);
-        alert("Error al conectar con el servidor");
+        showToast("Error al conectar con el servidor", "error");
     }
 }
 
 /* ============================================================
-   BOTONES NAVEGACIÓN
+   NOTIFICACIÓN SUPERIOR MINIMAL
 ============================================================ */
-if (prevBtn) {
-    prevBtn.onclick = () => alert("Usa la lista lateral para navegar");
+function showToast(message, type = "success") {
+
+    let notification = document.getElementById("top-notification");
+
+    if (!notification) {
+        notification = document.createElement("div");
+        notification.id = "top-notification";
+        document.body.appendChild(notification);
+    }
+
+    notification.className = type;
+    notification.textContent = message;
+
+    void notification.offsetWidth;
+
+    notification.classList.add("show");
+
+    setTimeout(() => {
+        notification.classList.remove("show");
+    }, 3000);
 }
 
-if (nextBtn) {
-    nextBtn.onclick = () => alert("Usa la lista lateral para navegar");
+/* ============================================================
+   UTILS
+============================================================ */
+function formatTime(secs) {
+    const m = Math.floor(secs / 60);
+    const s = Math.floor(secs % 60);
+    return `${m}:${s < 10 ? "0" : ""}${s}`;
 }

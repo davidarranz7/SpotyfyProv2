@@ -4,111 +4,104 @@
     <meta charset="UTF-8">
     <title>Buscador - Spotify Pro</title>
 
-    <!-- ESTILOS -->
     <link rel="stylesheet" href="/estilos/menu.css">
     <link rel="stylesheet" href="/estilos/buscador.css">
-
-    <!-- FUENTE -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
 
-<body>
+<body class="ultra-dark">
 
 {% include "menu.html" %}
 
 <div class="layout">
 
-    <!-- ================= SIDEBAR ================= -->
-    <aside class="sidebar">
+    <!-- SIDEBAR -->
+    <aside class="sidebar-glass">
 
-        <h3>🎵 Resultados</h3>
+        <h3 class="nav-title">RESULTADOS</h3>
 
         {% if resultados %}
-
-            <ul class="songs">
-
+        <ul class="songs">
             {% for r in resultados %}
+            <li class="song-row">
 
-                <li>
+                <div class="track-meta">
+                    <span class="track-name">{{ r.titulo }}</span>
+                    <span class="track-sub">YouTube Stream</span>
+                </div>
 
-                    <span class="song-title">
-                        {{ r.titulo }}
-                    </span>
+                <div class="song-actions">
+                    <button onclick="reproducir('{{ r.url }}', `{{ r.titulo }}`)">
+                        <i class="fas fa-play"></i>
+                    </button>
 
-                    <div class="song-actions">
+                    <button onclick="añadirCancion()">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                </div>
 
-                        <!-- PLAY -->
-                        <button
-                            onclick="reproducir('{{ r.url }}', `{{ r.titulo }}`)">
-                            ▶
-                        </button>
-
-                        <!-- ADD (YA NO PASA URL) -->
-                        <button
-                            onclick="añadirCancion()">
-                            +
-                        </button>
-
-                    </div>
-
-                </li>
-
+            </li>
             {% endfor %}
-
-            </ul>
-
+        </ul>
         {% else %}
-
-            <p class="no-results">
-                Sin resultados
-            </p>
-
+            <p>Sin resultados</p>
         {% endif %}
-
     </aside>
 
+    <!-- PLAYER -->
+    <section class="player-center">
 
-    <!-- ================= PLAYER ================= -->
-    <main class="player-panel">
+        <div class="card-glass-effect">
 
-        <div class="player-box">
-
-            <!-- TÍTULO -->
-            <h2 id="big-title">
-                Selecciona una canción
-            </h2>
-
-            <!-- VISUALIZADOR -->
-            <div
-                id="audio-visualizer"
-                class="audio-visualizer">
+            <div class="now-playing-pfp">
+                <div class="vinyl-record"></div>
+                <div class="badge-hi-res">STREAM PRO</div>
             </div>
 
-            <!-- AUDIO -->
-            <audio
-                id="audio"
-                controls
-                preload="auto"
-                playsinline>
-            </audio>
+            <div class="track-header">
+                <h1 id="big-title">Selecciona una canción</h1>
+                <p class="source-label">Streaming YouTube Engine</p>
+            </div>
 
-            <!-- NAVEGACIÓN -->
-            <div class="nav">
+            <div class="integrated-spectrum">
+                <div id="audio-visualizer" class="spectrum-bars"></div>
+            </div>
 
-                <button id="prev">⏮</button>
+            <div class="progress-engine">
+                <span id="time-current">0:00</span>
+                <div class="track-slider" id="progress-container">
+                    <div class="track-fill" id="progress-bar"></div>
+                </div>
+                <span id="time-total">0:00</span>
+            </div>
 
-                <button id="next">⏭</button>
+            <div class="controls-master">
 
+                <i class="fas fa-backward-step control-btn"></i>
+
+                <div class="play-trigger" id="play-btn">
+                    <i class="fas fa-play"></i>
+                </div>
+
+                <i class="fas fa-forward-step control-btn"></i>
+
+            </div>
+
+            <div class="volume-ui">
+                <i class="fas fa-volume-down"></i>
+                <input type="range" id="volume-slider" min="0" max="1" step="0.01" value="1">
+                <i class="fas fa-volume-up"></i>
             </div>
 
         </div>
 
-    </main>
+    </section>
+
+    <audio id="audio" crossorigin="anonymous"></audio>
 
 </div>
 
-<!-- SCRIPT -->
 <script src="/script/buscador.js"></script>
-
+<div id="toast-container"></div>
 </body>
 </html>
